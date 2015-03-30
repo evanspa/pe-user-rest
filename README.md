@@ -1,6 +1,6 @@
 # pe-user-rest
 
-[![Build Status](https://travis-ci.org/evanspa/pe-user-testutils.svg)](https://travis-ci.org/evanspa/pe-user-testutils)
+[![Build Status](https://travis-ci.org/evanspa/pe-user-rest.svg)](https://travis-ci.org/evanspa/pe-user-rest)
 
 A Clojure library encapsulating an abstraction modeling a user within a REST API
 and leveraging [Datomic](http://www.datomic.com).
