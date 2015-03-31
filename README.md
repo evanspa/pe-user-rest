@@ -5,8 +5,34 @@
 A Clojure library encapsulating an abstraction modeling a user within a REST API
 and leveraging [Datomic](http://www.datomic.com).
 
-This library essentially exposes the functionality of [pe-user-core](https://github.com/evanspa/pe-user-core) as a REST API
+pe-user-rest essentially exposes the functionality of [pe-user-core](https://github.com/evanspa/pe-user-core) as a REST API
 using [Liberator](http://clojure-liberator.github.io/liberator/).
+
+pe-user-rest is part of the [pe-* Clojure Library Suite](#pe--clojure-library-suite).
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [pe-user-rest](#pe-user-rest)
+  - [Documentation](#documentation)
+  - [Installation](#installation)
+  - [pe-* Clojure Library Suite](#pe--clojure-library-suite)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Documentation
+
+* [API Docs](http://evanspa.github.com/pe-user-rest)
+
+## Installation
+
+pe-user-rest is available from Clojars.  Add the following dependency to your
+`project.clj` file:
+
+```
+[pe-user-rest "0.0.1"]
+```
 
 ## pe-* Clojure Library Suite
 The pe-* Clojure library suite is a set of Clojure libraries to aid in the
@@ -31,16 +57,3 @@ development of Clojure and Java based applications.
 + **[pe-apptxn-restsupport](https://github.com/evanspa/pe-apptxn-restsupport)**:
   provides a set of functions implementing the server-side REST layer of the
   PEAppTransaction Logging Framework.
-
-## Documentation
-
-* [API Docs](http://evanspa.github.com/pe-user-rest)
-
-## Installation
-
-pe-user-rest is available from Clojars.  Add the following dependency to your
-`project.clj` file:
-
-```
-[pe-user-rest "0.0.1"]
-```
