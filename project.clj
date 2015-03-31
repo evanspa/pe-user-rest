@@ -1,4 +1,4 @@
-(defproject pe-user-rest "0.0.1-SNAPSHOT"
+(defproject pe-user-rest "0.0.1"
   :description "A Clojure library encapsulating an abstraction modeling a user within a REST API and leveraging Datomic."
   :url "https://github.com/evanspa/pe-user-rest"
   :license {:name "MIT"
