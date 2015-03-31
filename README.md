@@ -13,11 +13,9 @@ pe-user-rest is part of the [pe-* Clojure Library Suite](#pe--clojure-library-su
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
-
-- [pe-user-rest](#pe-user-rest)
-  - [Documentation](#documentation)
-  - [Installation](#installation)
-  - [pe-* Clojure Library Suite](#pe--clojure-library-suite)
+- [Documentation](#documentation)
+- [Installation](#installation)
+- [pe-* Clojure Library Suite](#pe--clojure-library-suite)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
