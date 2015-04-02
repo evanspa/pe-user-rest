@@ -14,6 +14,7 @@
             [pe-user-core.core :as usercore]
             [pe-datomic-testutils.core :as dtucore]
             [pe-rest-testutils.core :as rtucore]
+            [pe-user-testutils.core :as utucore]
             [pe-core-utils.core :as ucore]
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]
@@ -131,21 +132,6 @@
                                                           user-partition
                                                           [user-schema-filename
                                                            apptxn-logging-schema-filename]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Helpers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn- save-new-authtoken
-  [conn u-entid expiration-date]
-  (let [[token txnmap] (usercore/create-and-save-auth-token-txnmap user-partition
-                                                               u-entid
-                                                               expiration-date)
-        tx @(d/transact conn [txnmap])]
-    (d/resolve-tempid (d/db conn) (:tempids tx) (:db/id txnmap))))
-
-(defn- save-new-user
-  [conn user]
-  (ducore/save-new-entity conn (usercore/save-new-user-txnmap user-partition user)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The Tests
@@ -274,10 +260,12 @@
 (deftest user-success-login-by-username-with-empty-embedded
   (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (save-new-user @conn {:user/name "Karen Smith"
-                        :user/email "smithka@testing.com"
-                        :user/username "smithk"
-                        :user/password "insecure"})
+  (utucore/save-new-user @conn
+                         user-partition
+                         {:user/name "Karen Smith"
+                          :user/email "smithka@testing.com"
+                          :user/username "smithk"
+                          :user/password "insecure"})
   (testing "Successful user login with app txn logs with emtpy embedded."
     (assert-success-login app-with-empty-embedded-and-links
                           {"user/username-or-email" "smithk"
@@ -288,10 +276,12 @@
 (deftest user-success-login-by-username-with-nonempty-embedded
   (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (save-new-user @conn {:user/name "Karen Smith"
-                        :user/email "smithka@testing.com"
-                        :user/username "smithk"
-                        :user/password "insecure"})
+  (utucore/save-new-user @conn
+                         user-partition
+                         {:user/name "Karen Smith"
+                          :user/email "smithka@testing.com"
+                          :user/username "smithk"
+                          :user/password "insecure"})
   (testing "Successful user login with app txn logs with nonemtpy embedded."
     (assert-success-login app-with-nonempty-embedded-and-links
                           {"user/username-or-email" "smithk"
@@ -304,10 +294,12 @@
 (deftest user-success-login-by-email
   (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (save-new-user @conn {:user/name "Karen Smith"
-                        :user/email "smithka@testing.com"
-                        :user/username "smithk"
-                        :user/password "insecure"})
+  (utucore/save-new-user @conn
+                         user-partition
+                         {:user/name "Karen Smith"
+                          :user/email "smithka@testing.com"
+                          :user/username "smithk"
+                          :user/password "insecure"})
   (testing "Successful user login with app txn logs."
     (assert-success-login app-with-empty-embedded-and-links
                           {"user/username-or-email" "smithka@testing.com"
@@ -318,10 +310,12 @@
 (deftest unsuccessful-login-wrong-password
   (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (save-new-user @conn {:user/name "Karen Smith"
-                        :user/email "smithka@testing.com"
-                        :user/username "smithk"
-                        :user/password "insecure"})
+  (utucore/save-new-user @conn
+                         user-partition
+                         {:user/name "Karen Smith"
+                          :user/email "smithka@testing.com"
+                          :user/username "smithk"
+                          :user/password "insecure"})
   (testing "Unsuccessful user login with app txn logs."
     (assert-unauthorized-login app-with-empty-embedded-and-links
                                {"user/username-or-email" "smithk"
@@ -338,10 +332,12 @@
 (deftest unsuccessful-login-wrong-username
   (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (save-new-user @conn {:user/name "Karen Smith"
-                        :user/email "smithka@testing.com"
-                        :user/username "smithk"
-                        :user/password "insecure"})
+  (utucore/save-new-user @conn
+                         user-partition
+                         {:user/name "Karen Smith"
+                          :user/email "smithka@testing.com"
+                          :user/username "smithk"
+                          :user/password "insecure"})
   (testing "Unsuccessful user login with app txn logs."
     (assert-unauthorized-login app-with-empty-embedded-and-links
                                {"user/username-or-email" "smithka"
@@ -350,10 +346,12 @@
 (deftest unsuccessful-login-malformed-0
   (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (save-new-user @conn {:user/name "Karen Smith"
-                        :user/email "smithka@testing.com"
-                        :user/username "smithk"
-                        :user/password "insecure"})
+  (utucore/save-new-user @conn
+                         user-partition
+                         {:user/name "Karen Smith"
+                          :user/email "smithka@testing.com"
+                          :user/username "smithk"
+                          :user/password "insecure"})
   (testing "Unsuccessful malformed user login with app txn logs 0."
     (assert-malformed-login app-with-empty-embedded-and-links
                             {"user/username-or-email" "smithka"})))
