@@ -54,6 +54,8 @@ code that depends on the functionality of the pe-user-* libraries
 + **[pe-rest-utils](https://github.com/evanspa/pe-rest-utils)**: provides a set
   of functions for building easy-to-version hypermedia REST services (built on
   top of [Liberator](http://clojure-liberator.github.io/liberator/).
++ **[pe-rest-testutils](https://github.com/evanspa/pe-rest-testutils)**: provides
+  a set of helper functions for unit testing web services.
 + **pe-user-rest**: this library.
 + **[pe-apptxn-restsupport](https://github.com/evanspa/pe-apptxn-restsupport)**:
   provides a set of functions implementing the server-side REST layer of the
