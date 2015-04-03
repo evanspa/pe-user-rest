@@ -3,10 +3,10 @@
 [![Build Status](https://travis-ci.org/evanspa/pe-user-rest.svg)](https://travis-ci.org/evanspa/pe-user-rest)
 
 A Clojure library encapsulating an abstraction modeling a user within a REST API
-and leveraging [Datomic](http://www.datomic.com).
+and leveraging [Datomic](http://www.datomic.com).  pe-user-rest is a good jumping off point if you need to develop a web app or web service that needs to support the concept of user accounts; including user account creation, modification and authentication (both password and token-based).
 
 pe-user-rest essentially exposes the functionality of [pe-user-core](https://github.com/evanspa/pe-user-core) as a REST API
-using [Liberator](http://clojure-liberator.github.io/liberator/).
+using [Liberator](http://clojure-liberator.github.io/liberator/).  It also leverages the [pe-apptxn-restsupport](https://github.com/evanspa/pe-apptxn-restsupport) framework to support application transaction logging.
 
 pe-user-rest is part of the [pe-* Clojure Library Suite](#pe--clojure-library-suite).
 
