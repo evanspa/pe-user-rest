@@ -15,9 +15,9 @@
                   :exclusions [org.slf4j/slf4j-nop
                                joda-time
                                org.slf4j/slf4j-log4j12]]
-                 [pe-apptxn-restsupport "0.0.2"]
-                 [pe-rest-utils "0.0.2"]
-                 [pe-datomic-utils "0.0.6"]
+                 [pe-apptxn-restsupport "0.0.4"]
+                 [pe-rest-utils "0.0.3"]
+                 [pe-datomic-utils "0.0.16"]
                  [pe-user-core "0.0.1"]
                  [pe-core-utils "0.0.8"]
                  [ch.qos.logback/logback-classic "1.0.13"]
