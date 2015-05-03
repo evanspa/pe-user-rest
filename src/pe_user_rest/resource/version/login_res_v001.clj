@@ -50,7 +50,7 @@
                          (merge-links-fn user-entid)
                          (merge-embedded-fn user-entid))
                 [token newauthtoken-txnmap] (usercore/create-and-save-auth-token-txnmap partition user-entid nil)
-                user-txn-time (ducore/txn-time conn user-entid :user/hashed-password)
+                user-txn-time (ducore/txn-time conn user-entid)
                 user-txn-time-str (ucore/instant->rfc7231str user-txn-time)]
             @(d/transact conn [newauthtoken-txnmap])
             (apptxnlogger userapptxn/apptxnlog-login-remote-proc-done-success)
