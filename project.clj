@@ -15,9 +15,9 @@
                   :exclusions [org.slf4j/slf4j-nop
                                joda-time
                                org.slf4j/slf4j-log4j12]]
-                 [pe-apptxn-restsupport "0.0.4"]
-                 [pe-rest-utils "0.0.4"]
-                 [pe-datomic-utils "0.0.17"]
+                 [pe-apptxn-restsupport "0.0.7"]
+                 [pe-rest-utils "0.0.5"]
+                 [pe-datomic-utils "0.0.18"]
                  [pe-user-core "0.0.1"]
                  [pe-core-utils "0.0.9"]
                  [ch.qos.logback/logback-classic "1.0.13"]
@@ -25,7 +25,7 @@
                  [clj-time "0.8.0"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
-          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.5/"
+          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.6/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:source-paths ["dev"]  ;ensures 'user.clj' gets auto-loaded
                    :plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]
