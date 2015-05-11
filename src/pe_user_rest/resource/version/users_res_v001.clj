@@ -20,19 +20,27 @@
 ;; 0.0.1 Validator function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod new-user-validator-fn meta/v001
-  [version body-data]
-  (userval/create-user-validation-mask body-data))
+  [version user]
+  (userval/create-user-validation-mask user))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 body-data transformation functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod body-data-in-transform-fn meta/v001
-  [version body-data]
-  (identity body-data))
+  [version
+   conn
+   _   ;for 'users' resource, the 'in' would only ever be a NEW (to-be-created) user, so it by definition wouldn't have an entid
+   user
+   apptxnlogger]
+  (identity user))
 
 (defmethod body-data-out-transform-fn meta/v001
-  [version body-data]
-  (-> body-data
+  [version
+   conn
+   user-entid
+   user
+   apptxnlogger]
+  (-> user
       (dissoc :user/password)
       (dissoc :user/hashed-password)))
 
@@ -40,12 +48,12 @@
 ;; 0.0.1 Name extraction functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod extract-email-fn meta/v001
-  [version body-data]
-  (:user/email body-data))
+  [version user]
+  (:user/email user))
 
 (defmethod extract-username-fn meta/v001
-  [version body-data]
-  (:user/username body-data))
+  [version user]
+  (:user/username user))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 Entity lookup-by-name functions

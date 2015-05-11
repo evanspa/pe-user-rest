@@ -128,22 +128,19 @@
       (testing "headers and body of created user"
         (let [hdrs (:headers resp)
               resp-body-stream (:body resp)
-              user-location-str (get hdrs "location")
-              user-last-modified-str (get hdrs "last-modified")]
+              user-location-str (get hdrs "location")]
           (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
           (is (not (nil? resp-body-stream)))
           (is (not (nil? user-location-str)))
-          (is (not (nil? user-last-modified-str)))
-          (let [last-modified (ucore/rfc7231str->instant user-last-modified-str)
-                resp-user-entid-str (rtucore/last-url-part user-location-str)
+          (let [resp-user-entid-str (rtucore/last-url-part user-location-str)
                 pct (rucore/parse-media-type (get hdrs "Content-Type"))
                 charset (get rumeta/char-sets (:charset pct))
                 resp-user (rucore/read-res pct resp-body-stream charset)
                 auth-token (get hdrs userhdr-auth-token)]
             (is (not (nil? auth-token)))
-            (is (not (nil? last-modified)))
             (is (not (nil? resp-user-entid-str)))
             (is (not (nil? resp-user)))
+            (is (not (nil? (get resp-user "last-modified"))))
             (is (= "Karen Smith" (get resp-user "user/name")))
             (is (= "smithka@testing.com" (get resp-user "user/email")))
             (is (= "smithk" (get resp-user "user/username")))
@@ -203,22 +200,19 @@
       (testing "headers and body of created user"
         (let [hdrs (:headers resp)
               resp-body-stream (:body resp)
-              user-location-str (get hdrs "location")
-              user-last-modified-str (get hdrs "last-modified")]
+              user-location-str (get hdrs "location")]
           (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
           (is (not (nil? resp-body-stream)))
           (is (not (nil? user-location-str)))
-          (is (not (nil? user-last-modified-str)))
-          (let [last-modified (ucore/rfc7231str->instant user-last-modified-str)
-                resp-user-entid-str (rtucore/last-url-part user-location-str)
+          (let [resp-user-entid-str (rtucore/last-url-part user-location-str)
                 pct (rucore/parse-media-type (get hdrs "Content-Type"))
                 charset (get rumeta/char-sets (:charset pct))
                 resp-user (rucore/read-res pct resp-body-stream charset)
                 auth-token (get hdrs userhdr-auth-token)]
             (is (not (nil? auth-token)))
-            (is (not (nil? last-modified)))
             (is (not (nil? resp-user-entid-str)))
             (is (not (nil? resp-user)))
+            (is (not (nil? (get resp-user "last-modified"))))
             (is (= "Karen Smith" (get resp-user "user/name")))
             (is (= "smithka@testing.com" (get resp-user "user/email")))
             (is (nil? (get resp-user "user/username")))
@@ -278,22 +272,19 @@
       (testing "headers and body of created user"
         (let [hdrs (:headers resp)
               resp-body-stream (:body resp)
-              user-location-str (get hdrs "location")
-              user-last-modified-str (get hdrs "last-modified")]
+              user-location-str (get hdrs "location")]
           (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
           (is (not (nil? resp-body-stream)))
           (is (not (nil? user-location-str)))
-          (is (not (nil? user-last-modified-str)))
-          (let [last-modified (ucore/rfc7231str->instant user-last-modified-str)
-                resp-user-entid-str (rtucore/last-url-part user-location-str)
+          (let [resp-user-entid-str (rtucore/last-url-part user-location-str)
                 pct (rucore/parse-media-type (get hdrs "Content-Type"))
                 charset (get rumeta/char-sets (:charset pct))
                 resp-user (rucore/read-res pct resp-body-stream charset)
                 auth-token (get hdrs userhdr-auth-token)]
             (is (not (nil? auth-token)))
-            (is (not (nil? last-modified)))
             (is (not (nil? resp-user-entid-str)))
             (is (not (nil? resp-user)))
+            (is (not (nil? (get resp-user "last-modified"))))
             (is (= "Karen Smith" (get resp-user "user/name")))
             (is (nil? (get resp-user "user/email")))
             (is (= "smithk" (get resp-user "user/username")))

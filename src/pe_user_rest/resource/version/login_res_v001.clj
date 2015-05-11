@@ -18,12 +18,21 @@
 ;; 0.0.1 body-data transformation functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod body-data-in-transform-fn meta/v001
-  [version body-data]
-  (identity body-data))
+  [version
+   conn
+   _
+   post-as-do-login-input ; i.e., just email or username and password (for logging in!)
+   apptxnlogger]
+  (identity post-as-do-login-input))
 
 (defmethod body-data-out-transform-fn meta/v001
-  [version body-data]
-  (identity body-data))
+  [version
+   conn
+   _
+   post-as-do-login-result
+   apptxnlogger]
+  ; nothing to do here since 'do-login-fn' below is handling everything
+  (identity post-as-do-login-result))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 do login function
@@ -45,13 +54,13 @@
              (not (nil? password)))
       (let [[user-entid user-ent] (usercore/authenticate-user-by-password conn username-or-email password)]
         (if (not (nil? user-ent))
-          (let [user (-> (into {} user-ent)
+          (let [user-txn-time (ducore/txn-time conn user-entid)
+                user (-> (into {:last-modified (.getTime user-txn-time)} user-ent)
                          (ucore/trim-keys [:user/auth-token :user/hashed-password])
                          (merge-links-fn user-entid)
                          (merge-embedded-fn user-entid))
                 [token newauthtoken-txnmap] (usercore/create-and-save-auth-token-txnmap partition user-entid nil)
-                user-txn-time (ducore/txn-time conn user-entid)
-                user-txn-time-str (ucore/instant->rfc7231str user-txn-time)]
+                user-txn-time (ducore/txn-time conn user-entid)]
             @(d/transact conn [newauthtoken-txnmap])
             (apptxnlogger userapptxn/apptxnlog-login-remote-proc-done-success)
             {:status 200
@@ -61,7 +70,6 @@
                                                           entity-uri-prefix
                                                           meta/pathcomp-users
                                                           user-entid))
-             :last-modified user-txn-time-str
              :auth-token token})
           (do
             (apptxnlogger userapptxn/apptxnlog-login-remote-proc-done-invalid)
