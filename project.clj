@@ -30,7 +30,7 @@
                                   [org.clojure/data.json "0.2.5"]
                                   [org.clojure/tools.nrepl "0.2.7"]
                                   [org.postgresql/postgresql "9.4-1201-jdbc41"]
-                                  [pe-rest-testutils "0.0.3"]
+                                  [pe-rest-testutils "0.0.5"]
                                   [ring-server "0.3.1"]
                                   [ring-mock "0.1.5"]]}
              :test {:resource-paths ["test-resources"]}}
