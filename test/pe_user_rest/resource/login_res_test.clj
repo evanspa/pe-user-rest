@@ -216,7 +216,7 @@
     (testing "status code" (is (= 400 (:status resp))))
     (testing "cookies" (is (= (empty? (:cookies resp)))))))
 
-#_(deftest user-success-login-by-username-with-empty-embedded
+(deftest user-success-login-by-username-with-empty-embedded
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username db-spec "smithk")))
   (j/with-db-transaction [conn db-spec]
@@ -235,7 +235,7 @@
                           {}
                           {})))
 
-#_(deftest user-success-login-by-username-with-nonempty-embedded
+(deftest user-success-login-by-username-with-nonempty-embedded
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username db-spec "smithk")))
   (j/with-db-transaction [conn db-spec]
@@ -256,7 +256,7 @@
                           {"fruit" {"href" "/testing/pears/142"
                                     "type" "application/vnd.fruit-v0.0.1"}})))
 
-#_(deftest user-success-login-by-email
+(deftest user-success-login-by-email
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username db-spec "smithk")))
   (j/with-db-transaction [conn db-spec]
@@ -275,7 +275,7 @@
                           {}
                           {})))
 
-#_(deftest unsuccessful-login-wrong-password
+(deftest unsuccessful-login-wrong-password
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username db-spec "smithk")))
   (j/with-db-transaction [conn db-spec]
@@ -292,7 +292,7 @@
                                {"user/username-or-email" "smithk"
                                 "user/password" "in5ecure"})))
 
-#_(deftest unsuccessful-login-no-users-in-db
+(deftest unsuccessful-login-no-users-in-db
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username db-spec "smithk")))
   (testing "Unsuccessful user login with app txn logs."
@@ -300,7 +300,7 @@
                                {"user/username-or-email" "smithk"
                                 "user/password" "insecure"})))
 
-#_(deftest unsuccessful-login-wrong-username
+(deftest unsuccessful-login-wrong-username
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username db-spec "smithk")))
   (j/with-db-transaction [conn db-spec]
@@ -317,7 +317,7 @@
                                {"user/username-or-email" "smithka"
                                 "user/password" "insecure"})))
 
-#_(deftest unsuccessful-login-malformed-0
+(deftest unsuccessful-login-malformed-0
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
   (is (nil? (usercore/load-user-by-username db-spec "smithk")))
   (j/with-db-transaction [conn db-spec]

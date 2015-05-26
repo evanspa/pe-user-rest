@@ -42,8 +42,6 @@
                               nil
                               body-data-in-transform-fn
                               body-data-out-transform-fn
-
-                              nil
                               nil
                               nil
                               nil

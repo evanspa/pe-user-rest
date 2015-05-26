@@ -29,8 +29,10 @@
    db-spec
    _
    post-as-do-login-result]
-  ; nothing to do here since 'do-login-fn' below is handling everything
-  (identity post-as-do-login-result))
+  (-> post-as-do-login-result
+      (ucore/transform-map-val :user/created-at #(c/to-long %))
+      (ucore/transform-map-val :user/updated-at #(c/to-long %))
+      (ucore/transform-map-val :user/verified-at #(c/to-long %))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 do login function

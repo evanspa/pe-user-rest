@@ -52,9 +52,12 @@
                               userval/snu-any-issues
                               body-data-in-transform-fn
                               body-data-out-transform-fn
-                              [[extract-email-fn get-user-by-email-fn]
-                               [extract-username-fn get-user-by-username-fn]]
-                              userval/snu-email-already-registered
+                              [[extract-email-fn
+                                get-user-by-email-fn
+                                userval/snu-email-already-registered]
+                               [extract-username-fn
+                                get-user-by-username-fn
+                                userval/snu-username-already-registered]]
                               next-user-account-id-fn
                               save-new-user-fn
                               nil
@@ -62,7 +65,6 @@
                               make-session-fn
                               nil
                               :user/hashed-password))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Validator function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

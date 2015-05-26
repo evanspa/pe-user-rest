@@ -13,6 +13,7 @@
             [pe-user-rest.resource.version.users-res-v001]
             [pe-user-rest.meta :as meta]
             [pe-user-core.core :as usercore]
+            [pe-user-core.validation :as userval]
             [pe-user-core.ddl :as uddl]
             [pe-rest-testutils.core :as rtucore]
             [pe-core-utils.core :as ucore]
@@ -249,7 +250,104 @@
               (is (not (nil? loaded-user-entid)))
               (is (= (Long/parseLong resp-user-entid-str) loaded-user-entid)))))))))
 
-(deftest failed-user-creation
+(deftest failed-user-creation-pre-existing-email
+  (testing "Unsuccessful creation of user."
+    (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+    (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+    (j/with-db-transaction [conn db-spec]
+      (let [new-user-id (usercore/next-user-account-id conn)]
+        (usercore/save-new-user db-spec
+                                new-user-id
+                                {:user/name "Karen Smith"
+                                 :user/email "smithka@testing.com"
+                                 :user/username "smithk"
+                                 :user/created-at (c/to-long (t/now))
+                                 :user/password "insecure"})))
+    (let [user {"user/name" "Karen K. Smith"
+                "user/username" "karenksmith"
+                "user/email" "smithka@testing.com"
+                "user/created-at" (c/to-long (t/now))
+                "user/password" "insecure"}
+          req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                          (meta/mt-subtype-user usermt-subtype-prefix)
+                                          meta/v001
+                                          "UTF-8;q=1,ISO-8859-1;q=0"
+                                          "json"
+                                          "en-US"
+                                          :post
+                                          users-uri-template)
+                  (rtucore/header userhdr-establish-session "true")
+                  (mock/body (json/write-str user))
+                  (mock/content-type (rucore/content-type rumeta/mt-type
+                                                          (meta/mt-subtype-user usermt-subtype-prefix)
+                                                          meta/v001
+                                                          "json"
+                                                          "UTF-8")))
+          resp (app req)]
+      (testing "status code" (is (= 403 (:status resp))))
+      (testing "headers and body of created user"
+        (let [hdrs (:headers resp)
+              user-location-str (get hdrs "location")]
+          (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
+          (is (nil? user-location-str))
+          (let [error-mask-str (get hdrs userhdr-error-mask)]
+            (is (nil? (get hdrs userhdr-auth-token)))
+            (is (not (nil? error-mask-str)))
+            (is (nil? (usercore/load-user-by-username db-spec "karenksmith")))
+            (let [error-mask (Long/parseLong error-mask-str)]
+              (is (pos? (bit-and error-mask userval/snu-any-issues)))
+              (is (pos? (bit-and error-mask userval/snu-email-already-registered))))))))))
+
+(deftest failed-user-creation-pre-existing-username
+  (testing "Unsuccessful creation of user."
+    (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+    (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+    (j/with-db-transaction [conn db-spec]
+      (let [new-user-id (usercore/next-user-account-id conn)]
+        (usercore/save-new-user db-spec
+                                new-user-id
+                                {:user/name "Karen Smith"
+                                 :user/email "smithka@testing.com"
+                                 :user/username "smithk"
+                                 :user/created-at (c/to-long (t/now))
+                                 :user/password "insecure"})))
+    (let [user {"user/name" "Karen K. Smith"
+                "user/username" "smithk"
+                "user/email" "karenksmith@testing.com"
+                "user/created-at" (c/to-long (t/now))
+                "user/password" "insecure"}
+          req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                          (meta/mt-subtype-user usermt-subtype-prefix)
+                                          meta/v001
+                                          "UTF-8;q=1,ISO-8859-1;q=0"
+                                          "json"
+                                          "en-US"
+                                          :post
+                                          users-uri-template)
+                  (rtucore/header userhdr-establish-session "true")
+                  (mock/body (json/write-str user))
+                  (mock/content-type (rucore/content-type rumeta/mt-type
+                                                          (meta/mt-subtype-user usermt-subtype-prefix)
+                                                          meta/v001
+                                                          "json"
+                                                          "UTF-8")))
+          resp (app req)]
+      (testing "status code" (is (= 403 (:status resp))))
+      (testing "headers and body of created user"
+        (let [hdrs (:headers resp)
+              user-location-str (get hdrs "location")]
+          (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
+          (is (nil? user-location-str))
+          (let [error-mask-str (get hdrs userhdr-error-mask)]
+            (is (nil? (get hdrs userhdr-auth-token)))
+            (is (not (nil? error-mask-str)))
+            (is (nil? (usercore/load-user-by-email db-spec "karenksmith@testing.com")))
+            (log/debug "error-mask-str: " error-mask-str)
+            (let [error-mask (Long/parseLong error-mask-str)]
+              (is (pos? (bit-and error-mask userval/snu-any-issues)))
+              (is (pos? (bit-and error-mask userval/snu-username-already-registered))))))))))
+
+(deftest failed-user-creation-simulated-server-error
   (testing "Unsuccessful creation of user."
     (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
     (is (nil? (usercore/load-user-by-username db-spec "smithk")))
