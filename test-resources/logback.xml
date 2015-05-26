@@ -15,17 +15,6 @@
     <prudent>false</prudent>
   </appender>
 
-  <appender name="DATOMIC-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <encoder><pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern></encoder>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${PE_LOGS_DIR}/datomic-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-        <maxFileSize>64 MB</maxFileSize>
-      </timeBasedFileNamingAndTriggeringPolicy>
-    </rollingPolicy>
-    <prudent>false</prudent>
-  </appender>
-
   <appender name="CATCHALL-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <encoder><pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern></encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -45,19 +34,7 @@
     <appender-ref ref="CATCHALL-FILE" />
     <appender-ref ref="STDOUT" />
   </root>
-  <logger name="datomic" level="DEBUG">
-    <appender-ref ref="DATOMIC-FILE" />
-    <appender-ref ref="STDOUT" />
-  </logger>
   <logger name="pe-user-rest" level="DEBUG">
-    <appender-ref ref="PE-LOGFILE" />
-    <appender-ref ref="STDOUT" />
-  </logger>
-  <logger name="pe-user-core" level="DEBUG">
-    <appender-ref ref="PE-LOGFILE" />
-    <appender-ref ref="STDOUT" />
-  </logger>
-  <logger name="pe-rest-utils" level="DEBUG">
     <appender-ref ref="PE-LOGFILE" />
     <appender-ref ref="STDOUT" />
   </logger>

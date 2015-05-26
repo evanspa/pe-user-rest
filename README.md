@@ -2,11 +2,14 @@
 
 [![Build Status](https://travis-ci.org/evanspa/pe-user-rest.svg)](https://travis-ci.org/evanspa/pe-user-rest)
 
-A Clojure library encapsulating an abstraction modeling a user within a REST API
-and leveraging [Datomic](http://www.datomic.com).  pe-user-rest is a good jumping off point if you need to develop a web app or web service that needs to support the concept of user accounts; including user account creation, modification and authentication (both password and token-based).
+A Clojure library encapsulating an abstraction modeling a user within a REST
+API.  pe-user-rest is a good jumping off point if you need to develop a web app
+or web service that needs to support the concept of user accounts; including
+user account creation, modification and authentication (both password and
+token-based).
 
 pe-user-rest essentially exposes the functionality of [pe-user-core](https://github.com/evanspa/pe-user-core) as a REST API
-using [Liberator](http://clojure-liberator.github.io/liberator/).  It also leverages the [pe-apptxn-restsupport](https://github.com/evanspa/pe-apptxn-restsupport) framework to support application transaction logging.
+using [Liberator](http://clojure-liberator.github.io/liberator/).
 
 pe-user-rest is part of the [pe-* Clojure Library Suite](#pe--clojure-library-suite).
 
@@ -29,7 +32,7 @@ pe-user-rest is available from Clojars.  Add the following dependency to your
 `project.clj` file:
 
 ```
-[pe-user-rest "0.0.6"]
+[pe-user-rest "0.0.7"]
 ```
 
 ## pe-* Clojure Library Suite
@@ -37,7 +40,9 @@ The pe-* Clojure library suite is a set of Clojure libraries to aid in the
 development of Clojure and Java based applications.
 *(Each library is available on Clojars.)*
 + **[pe-core-utils](https://github.com/evanspa/pe-core-utils)**: provides a set
-  of various collection-related, date-related and other helpers functions.
+of various collection-related, date-related and other helpers functions.
++ **[pe-jdbc-utils](https://github.com/evanspa/pe-jdbc-utils)**: provides
+  a set of helper functions for working with JDBC.
 + **[pe-datomic-utils](https://github.com/evanspa/pe-datomic-utils)**: provides
   a set of helper functions for working with [Datomic](https://www.datomic.com).
 + **[pe-datomic-testutils](https://github.com/evanspa/pe-datomic-testutils)**: provides

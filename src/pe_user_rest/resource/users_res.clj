@@ -1,7 +1,5 @@
 (ns pe-user-rest.resource.users-res
-  (:require [datomic.api :refer [q db] :as d]
-            [clojure.pprint :refer (pprint)]
-            [liberator.core :refer [defresource]]
+  (:require [liberator.core :refer [defresource]]
             [liberator.representation :refer [ring-response]]
             [clj-time.core :as t]
             [clojure.edn :as edn]
@@ -10,14 +8,11 @@
             [pe-user-rest.meta :as meta]
             [clojure.tools.logging :as log]
             [pe-rest-utils.macros :refer [defmulti-by-version]]
-            [pe-datomic-utils.core :as ducore]
             [pe-core-utils.core :as ucore]
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]
             [pe-user-core.core :as usercore]
-            [pe-user-core.validation :as userval]
-            [pe-user-rest.apptxn :as userapptxn]
-            [pe-apptxn-restsupport.resource-support :as atressup]))
+            [pe-user-core.validation :as userval]))
 
 (declare process-users-post!)
 (declare process-login-post!)
@@ -30,19 +25,14 @@
 (declare get-user-by-email-fn)
 (declare get-user-by-username-fn)
 (declare make-session-fn)
+(declare next-user-account-id-fn)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Handler
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn handle-users-post!
   [ctx
-   conn
-   partition
-   apptxn-partition
-   hdr-apptxn-id
-   hdr-useragent-device-make
-   hdr-useragent-device-os
-   hdr-useragent-device-os-version
+   db-spec
    base-url
    entity-uri-prefix
    entity-uri
@@ -51,13 +41,7 @@
    links-fn]
   (rucore/put-or-post-invoker ctx
                               :post-as-create
-                              conn
-                              partition
-                              apptxn-partition
-                              hdr-apptxn-id
-                              hdr-useragent-device-make
-                              hdr-useragent-device-os
-                              hdr-useragent-device-os-version
+                              db-spec
                               base-url
                               entity-uri-prefix
                               entity-uri
@@ -65,24 +49,19 @@
                               links-fn
                               []
                               new-user-validator-fn
-                              userval/saveusr-any-issues
+                              userval/snu-any-issues
                               body-data-in-transform-fn
                               body-data-out-transform-fn
                               [[extract-email-fn get-user-by-email-fn]
                                [extract-username-fn get-user-by-username-fn]]
-                              userval/saveusr-email-already-registered
+                              userval/snu-email-already-registered
+                              next-user-account-id-fn
                               save-new-user-fn
                               nil
                               hdr-establish-session
                               make-session-fn
                               nil
-                              userapptxn/apptxn-user-create
-                              userapptxn/apptxnlog-createuser-remote-proc-started
-                              userapptxn/apptxnlog-createuser-remote-proc-done-success
-                              userapptxn/apptxnlog-createuser-remote-proc-done-err-occurred
-                              :user/hashed-password
-                              atressup/apptxn-async-logger
-                              atressup/make-apptxn))
+                              :user/hashed-password))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Validator function
@@ -108,6 +87,11 @@
 (defmulti-by-version get-user-by-username-fn meta/v001)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Next user account id function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmulti-by-version next-user-account-id-fn meta/v001)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Save new user function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmulti-by-version save-new-user-fn meta/v001)
@@ -118,18 +102,12 @@
 (defmulti-by-version make-session-fn meta/v001)
 
 (defresource users-res
-  [conn
-   partition
-   apptxn-partition
+  [db-spec
    mt-subtype-prefix
    hdr-auth-token
    hdr-error-mask
    base-url
    entity-uri-prefix
-   hdr-apptxn-id
-   hdr-useragent-device-make
-   hdr-useragent-device-os
-   hdr-useragent-device-os-version
    hdr-establish-session
    embedded-resources-fn
    links-fn]
@@ -139,13 +117,7 @@
   :allowed-methods [:post]
   :known-content-type? (rucore/known-content-type-predicate (meta/supported-media-types mt-subtype-prefix))
   :post! (fn [ctx] (handle-users-post! ctx
-                                       conn
-                                       partition
-                                       apptxn-partition
-                                       hdr-apptxn-id
-                                       hdr-useragent-device-make
-                                       hdr-useragent-device-os
-                                       hdr-useragent-device-os-version
+                                       db-spec
                                        base-url
                                        entity-uri-prefix
                                        (:uri (:request ctx))

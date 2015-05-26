@@ -1,42 +1,34 @@
 (ns pe-user-rest.resource.users-res-test
   (:require [clojure.test :refer :all]
             [clojure.data.json :as json]
-            [clojure.pprint :refer (pprint)]
-            [datomic.api :refer [q db] :as d]
             [compojure.core :refer [defroutes ANY]]
             [ring.middleware.cookies :refer [wrap-cookies]]
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]
             [ring.mock.request :as mock]
-            [pe-datomic-utils.core :as ducore]
-            [pe-apptxn-core.core :as apptxncore]
+            [clojure.java.jdbc :as j]
             [pe-user-rest.resource.users-res :as userres]
             [pe-user-rest.resource.version.users-res-v001]
-            [pe-apptxn-restsupport.version.resource-support-v001]
             [pe-user-rest.meta :as meta]
             [pe-user-core.core :as usercore]
-            [pe-datomic-testutils.core :as dtucore]
+            [pe-user-core.ddl :as uddl]
             [pe-rest-testutils.core :as rtucore]
             [pe-core-utils.core :as ucore]
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]
-            [pe-user-rest.apptxn :as userapptxn]
-            [pe-user-rest.test-utils :refer [db-uri
-                                             user-partition
-                                             usermt-subtype-prefix
-                                             user-schema-filename
-                                             apptxn-logging-schema-filename
+            [pe-jdbc-utils.core :as jcore]
+            [pe-user-rest.test-utils :refer [usermt-subtype-prefix
                                              base-url
                                              userhdr-auth-token
                                              userhdr-error-mask
-                                             userhdr-apptxn-id
-                                             userhdr-useragent-device-make
-                                             userhdr-useragent-device-os
-                                             userhdr-useragent-device-os-version
                                              userhdr-establish-session
                                              entity-uri-prefix
-                                             users-uri-template]]))
-(def conn (atom nil))
+                                             users-uri-template
+                                             db-spec-without-db
+                                             db-spec
+                                             db-name]]))
 
 (defn embedded-resources-fn
   [version
@@ -59,18 +51,12 @@
 (defroutes routes
   (ANY users-uri-template
        []
-       (userres/users-res @conn
-                          user-partition
-                          user-partition
+       (userres/users-res db-spec
                           usermt-subtype-prefix
                           userhdr-auth-token
                           userhdr-error-mask
                           base-url
                           entity-uri-prefix
-                          userhdr-apptxn-id
-                          userhdr-useragent-device-make
-                          userhdr-useragent-device-os
-                          userhdr-useragent-device-os-version
                           userhdr-establish-session
                           embedded-resources-fn
                           links-fn)))
@@ -86,22 +72,34 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fixtures
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-fixtures :each (dtucore/make-db-refresher-fixture-fn db-uri
-                                                          conn
-                                                          user-partition
-                                                          [user-schema-filename
-                                                           apptxn-logging-schema-filename]))
+(use-fixtures :each (fn [f]
+                      (jcore/drop-database db-spec-without-db db-name)
+                      (jcore/create-database db-spec-without-db db-name)
+                      (j/db-do-commands db-spec
+                                        true
+                                        uddl/schema-version-ddl
+                                        uddl/v0-create-user-account-ddl
+                                        uddl/v0-add-unique-constraint-user-account-email
+                                        uddl/v0-add-unique-constraint-user-account-username
+                                        uddl/v0-create-authentication-token-ddl
+                                        uddl/v0-add-column-user-account-updated-w-auth-token)
+                      (jcore/with-try-catch-exec-as-query db-spec
+                        (uddl/v0-create-updated-count-inc-trigger-function-fn db-spec))
+                      (jcore/with-try-catch-exec-as-query db-spec
+                        (uddl/v0-create-user-account-updated-count-trigger-fn db-spec))
+                      (f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (deftest success-user-creation-with-non-nil-req
-  (testing "Successful creation of user with app txn logs."
-    (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-    (is (nil? (usercore/load-user-by-username @conn "smithk")))
+  (testing "Successful creation of user."
+    (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+    (is (nil? (usercore/load-user-by-username db-spec "smithk")))
     (let [user {"user/name" "Karen Smith"
                 "user/email" "smithka@testing.com"
                 "user/username" "smithk"
+                "user/created-at" (c/to-long (t/now))
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                           (meta/mt-subtype-user usermt-subtype-prefix)
@@ -110,11 +108,7 @@
                                           "json"
                                           "en-US"
                                           :post
-                                          users-uri-template
-                                          userhdr-apptxn-id
-                                          userhdr-useragent-device-make
-                                          userhdr-useragent-device-os
-                                          userhdr-useragent-device-os-version)
+                                          users-uri-template)
                   (rtucore/header userhdr-establish-session "true")
                   (mock/body (json/write-str user))
                   (mock/content-type (rucore/content-type rumeta/mt-type
@@ -140,40 +134,24 @@
             (is (not (nil? auth-token)))
             (is (not (nil? resp-user-entid-str)))
             (is (not (nil? resp-user)))
-            (is (not (nil? (get resp-user "last-modified"))))
+            (is (not (nil? (get resp-user "user/created-at"))))
             (is (= "Karen Smith" (get resp-user "user/name")))
             (is (= "smithka@testing.com" (get resp-user "user/email")))
             (is (= "smithk" (get resp-user "user/username")))
             (is (nil? (get resp-user "user/hashed-password")))
-            (let [[loaded-user-entid loaded-user-ent] (usercore/load-user-by-authtoken @conn
+            (let [[loaded-user-entid loaded-user-ent] (usercore/load-user-by-authtoken db-spec
                                                                                        (Long/parseLong resp-user-entid-str)
                                                                                        auth-token)]
               (is (not (nil? loaded-user-entid)))
-              (is (= (Long/parseLong resp-user-entid-str) loaded-user-entid)))
-            (let [apptxns (apptxncore/all-apptxns @conn)
-                  _ (is (= 1 (count apptxns)))
-                  apptxn (first apptxns)
-                  apptxnlogs (:apptxn/logs apptxn)]
-              (is (= 0 (:apptxn/usecase apptxn)))
-              (is (= "iPhone" (:apptxn/user-agent-device-make apptxn)))
-              (is (= "iOS" (:apptxn/user-agent-device-os apptxn)))
-              (is (= "8.1.2" (:apptxn/user-agent-device-os-version apptxn)))
-              (is (= 2 (count apptxnlogs)))
-              (is (= 3 (:apptxnlog/usecase-event (first apptxnlogs))))
-              (is (not (nil? (:apptxnlog/timestamp (first apptxnlogs)))))
-              (is (nil? (:apptxnlog/edn-ctx (first apptxnlogs))))
-              (is (nil? (:apptxnlog/in-ctx-err-desc (first apptxnlogs))))
-              (is (= 5 (:apptxnlog/usecase-event (second apptxnlogs))))
-              (is (not (nil? (:apptxnlog/timestamp (second apptxnlogs)))))
-              (is (nil? (:apptxnlog/edn-ctx (second apptxnlogs))))
-              (is (nil? (:apptxnlog/in-ctx-err-desc (second apptxnlogs)))))))))))
+              (is (= (Long/parseLong resp-user-entid-str) loaded-user-entid)))))))))
 
 (deftest success-user-creation-with-nil-username-req
-  (testing "Successful creation of user with app txn logs."
-    (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-    (is (nil? (usercore/load-user-by-username @conn "smithk")))
+  (testing "Successful creation of user."
+    (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+    (is (nil? (usercore/load-user-by-username db-spec "smithk")))
     (let [user {"user/name" "Karen Smith"
                 "user/email" "smithka@testing.com"
+                "user/created-at" (c/to-long (t/now))
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                           (meta/mt-subtype-user usermt-subtype-prefix)
@@ -182,11 +160,7 @@
                                           "json"
                                           "en-US"
                                           :post
-                                          users-uri-template
-                                          userhdr-apptxn-id
-                                          userhdr-useragent-device-make
-                                          userhdr-useragent-device-os
-                                          userhdr-useragent-device-os-version)
+                                          users-uri-template)
                   (rtucore/header userhdr-establish-session "true")
                   (mock/body (json/write-str user))
                   (mock/content-type (rucore/content-type rumeta/mt-type
@@ -212,40 +186,24 @@
             (is (not (nil? auth-token)))
             (is (not (nil? resp-user-entid-str)))
             (is (not (nil? resp-user)))
-            (is (not (nil? (get resp-user "last-modified"))))
+            (is (not (nil? (get resp-user "user/created-at"))))
             (is (= "Karen Smith" (get resp-user "user/name")))
             (is (= "smithka@testing.com" (get resp-user "user/email")))
             (is (nil? (get resp-user "user/username")))
             (is (nil? (get resp-user "user/hashed-password")))
-            (let [[loaded-user-entid loaded-user-ent] (usercore/load-user-by-authtoken @conn
+            (let [[loaded-user-entid loaded-user-ent] (usercore/load-user-by-authtoken db-spec
                                                                                        (Long/parseLong resp-user-entid-str)
                                                                                        auth-token)]
               (is (not (nil? loaded-user-entid)))
-              (is (= (Long/parseLong resp-user-entid-str) loaded-user-entid)))
-            (let [apptxns (apptxncore/all-apptxns @conn)
-                  _ (is (= 1 (count apptxns)))
-                  apptxn (first apptxns)
-                  apptxnlogs (:apptxn/logs apptxn)]
-              (is (= 0 (:apptxn/usecase apptxn)))
-              (is (= "iPhone" (:apptxn/user-agent-device-make apptxn)))
-              (is (= "iOS" (:apptxn/user-agent-device-os apptxn)))
-              (is (= "8.1.2" (:apptxn/user-agent-device-os-version apptxn)))
-              (is (= 2 (count apptxnlogs)))
-              (is (= 3 (:apptxnlog/usecase-event (first apptxnlogs))))
-              (is (not (nil? (:apptxnlog/timestamp (first apptxnlogs)))))
-              (is (nil? (:apptxnlog/edn-ctx (first apptxnlogs))))
-              (is (nil? (:apptxnlog/in-ctx-err-desc (first apptxnlogs))))
-              (is (= 5 (:apptxnlog/usecase-event (second apptxnlogs))))
-              (is (not (nil? (:apptxnlog/timestamp (second apptxnlogs)))))
-              (is (nil? (:apptxnlog/edn-ctx (second apptxnlogs))))
-              (is (nil? (:apptxnlog/in-ctx-err-desc (second apptxnlogs)))))))))))
+              (is (= (Long/parseLong resp-user-entid-str) loaded-user-entid)))))))))
 
 (deftest success-user-creation-with-nil-email-req
-  (testing "Successful creation of user with app txn logs."
-    (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-    (is (nil? (usercore/load-user-by-username @conn "smithk")))
+  (testing "Successful creation of user."
+    (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+    (is (nil? (usercore/load-user-by-username db-spec "smithk")))
     (let [user {"user/name" "Karen Smith"
                 "user/username" "smithk"
+                "user/created-at" (c/to-long (t/now))
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                           (meta/mt-subtype-user usermt-subtype-prefix)
@@ -254,11 +212,7 @@
                                           "json"
                                           "en-US"
                                           :post
-                                          users-uri-template
-                                          userhdr-apptxn-id
-                                          userhdr-useragent-device-make
-                                          userhdr-useragent-device-os
-                                          userhdr-useragent-device-os-version)
+                                          users-uri-template)
                   (rtucore/header userhdr-establish-session "true")
                   (mock/body (json/write-str user))
                   (mock/content-type (rucore/content-type rumeta/mt-type
@@ -284,41 +238,25 @@
             (is (not (nil? auth-token)))
             (is (not (nil? resp-user-entid-str)))
             (is (not (nil? resp-user)))
-            (is (not (nil? (get resp-user "last-modified"))))
+            (is (not (nil? (get resp-user "user/created-at"))))
             (is (= "Karen Smith" (get resp-user "user/name")))
             (is (nil? (get resp-user "user/email")))
             (is (= "smithk" (get resp-user "user/username")))
             (is (nil? (get resp-user "user/hashed-password")))
-            (let [[loaded-user-entid loaded-user-ent] (usercore/load-user-by-authtoken @conn
+            (let [[loaded-user-entid loaded-user-ent] (usercore/load-user-by-authtoken db-spec
                                                                                        (Long/parseLong resp-user-entid-str)
                                                                                        auth-token)]
               (is (not (nil? loaded-user-entid)))
-              (is (= (Long/parseLong resp-user-entid-str) loaded-user-entid)))
-            (let [apptxns (apptxncore/all-apptxns @conn)
-                  _ (is (= 1 (count apptxns)))
-                  apptxn (first apptxns)
-                  apptxnlogs (:apptxn/logs apptxn)]
-              (is (= 0 (:apptxn/usecase apptxn)))
-              (is (= "iPhone" (:apptxn/user-agent-device-make apptxn)))
-              (is (= "iOS" (:apptxn/user-agent-device-os apptxn)))
-              (is (= "8.1.2" (:apptxn/user-agent-device-os-version apptxn)))
-              (is (= 2 (count apptxnlogs)))
-              (is (= 3 (:apptxnlog/usecase-event (first apptxnlogs))))
-              (is (not (nil? (:apptxnlog/timestamp (first apptxnlogs)))))
-              (is (nil? (:apptxnlog/edn-ctx (first apptxnlogs))))
-              (is (nil? (:apptxnlog/in-ctx-err-desc (first apptxnlogs))))
-              (is (= 5 (:apptxnlog/usecase-event (second apptxnlogs))))
-              (is (not (nil? (:apptxnlog/timestamp (second apptxnlogs)))))
-              (is (nil? (:apptxnlog/edn-ctx (second apptxnlogs))))
-              (is (nil? (:apptxnlog/in-ctx-err-desc (second apptxnlogs)))))))))))
+              (is (= (Long/parseLong resp-user-entid-str) loaded-user-entid)))))))))
 
 (deftest failed-user-creation
-  (testing "Unsuccessful creation of user with app txn logs."
-    (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-    (is (nil? (usercore/load-user-by-username @conn "smithk")))
+  (testing "Unsuccessful creation of user."
+    (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+    (is (nil? (usercore/load-user-by-username db-spec "smithk")))
     (with-redefs [usercore/load-user-by-email (fn [conn email] (throw (Exception. "exception")))]
       (let [user {"user/name" "Karen Smith"
                   "user/email" "smithka@testing.com"
+                  "user/created-at" (c/to-long (t/now))
                   "user/username" "smithk"
                   "user/password" "insecure"}
             req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
@@ -328,11 +266,7 @@
                                             "json"
                                             "en-US"
                                             :post
-                                            users-uri-template
-                                            userhdr-apptxn-id
-                                            userhdr-useragent-device-make
-                                            userhdr-useragent-device-os
-                                            userhdr-useragent-device-os-version)
+                                            users-uri-template)
                     (rtucore/header userhdr-establish-session "true")
                     (mock/body (json/write-str user))
                     (mock/content-type (rucore/content-type rumeta/mt-type
@@ -341,21 +275,6 @@
                                                             "json"
                                                             "UTF-8")))
             resp (app req)]
-        (testing "status code" (is (= 500 (:status resp))))
-        (let [apptxns (apptxncore/all-apptxns @conn)
-              _ (is (= 1 (count apptxns)))
-              apptxn (first apptxns)
-              apptxnlogs (:apptxn/logs apptxn)]
-          (is (= 0 (:apptxn/usecase apptxn)))
-          (is (= "iPhone" (:apptxn/user-agent-device-make apptxn)))
-          (is (= "iOS" (:apptxn/user-agent-device-os apptxn)))
-          (is (= "8.1.2" (:apptxn/user-agent-device-os-version apptxn)))
-          (is (= 2 (count apptxnlogs)))
-          (is (= 3 (:apptxnlog/usecase-event (first apptxnlogs))))
-          (is (not (nil? (:apptxnlog/timestamp (first apptxnlogs)))))
-          (is (= 4 (:apptxnlog/usecase-event (second apptxnlogs))))
-          (is (not (nil? (:apptxnlog/timestamp (second apptxnlogs)))))
-          (is (not (nil? (:apptxnlog/edn-ctx (second apptxnlogs)))))
-          (is (not (nil? (:apptxnlog/in-ctx-err-desc (second apptxnlogs))))))))
-    (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-    (is (nil? (usercore/load-user-by-username @conn "smithk")))))
+        (testing "status code" (is (= 500 (:status resp))))))
+    (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+    (is (nil? (usercore/load-user-by-username db-spec "smithk")))))

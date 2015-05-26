@@ -2,49 +2,41 @@
   (:require [clojure.test :refer :all]
             [clojure.data.json :as json]
             [clojure.pprint :refer (pprint)]
-            [datomic.api :refer [q db] :as d]
             [clojure.tools.logging :as log]
             [compojure.core :refer [defroutes ANY]]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]
             [ring.middleware.cookies :refer [wrap-cookies]]
             [compojure.handler :as handler]
             [ring.mock.request :as mock]
-            [pe-datomic-utils.core :as ducore]
-            [pe-apptxn-core.core :as apptxncore]
+            [clojure.java.jdbc :as j]
             [pe-user-rest.resource.login-res :as loginres]
             [pe-user-rest.meta :as meta]
             [pe-user-core.core :as usercore]
-            [pe-datomic-testutils.core :as dtucore]
+            [pe-user-core.ddl :as uddl]
             [pe-rest-testutils.core :as rtucore]
-            [pe-user-testutils.core :as utucore]
             [pe-core-utils.core :as ucore]
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]
-            [pe-user-rest.apptxn :as userapptxn]
-            [pe-user-rest.test-utils :refer [db-uri
-                                             usermt-subtype-prefix
-                                             user-partition
-                                             user-schema-filename
-                                             apptxn-logging-schema-filename
+            [pe-jdbc-utils.core :as jcore]
+            [pe-user-rest.test-utils :refer [usermt-subtype-prefix
                                              base-url
                                              userhdr-auth-token
                                              userhdr-error-mask
-                                             userhdr-apptxn-id
-                                             userhdr-useragent-device-make
-                                             userhdr-useragent-device-os
-                                             userhdr-useragent-device-os-version
                                              userhdr-establish-session
                                              entity-uri-prefix
-                                             login-uri-template]]))
-(def conn (atom nil))
-
+                                             login-uri-template
+                                             db-spec-without-db
+                                             db-spec
+                                             db-name]]))
 (defn empty-embedded-resources-fn
   [version
    base-url
    entity-uri-prefix
    entity-uri
-   conn
+   db-spec
    accept-format-ind
-   user-entid]
+   user-id]
   {})
 
 (defn empty-links-fn
@@ -52,56 +44,44 @@
    base-url
    entity-uri-prefix
    entity-uri
-   user-entid]
+   user-id]
   {})
 
 (defroutes routes-with-empty-embedded-and-links
   (ANY login-uri-template
        []
-       (loginres/login-res @conn
-                           user-partition
-                           user-partition
+       (loginres/login-res db-spec
                            usermt-subtype-prefix
                            userhdr-auth-token
                            userhdr-error-mask
                            base-url
                            entity-uri-prefix
-                           userhdr-apptxn-id
-                           userhdr-useragent-device-make
-                           userhdr-useragent-device-os
-                           userhdr-useragent-device-os-version
                            empty-embedded-resources-fn
                            empty-links-fn)))
 
 (defroutes routes-with-nonempty-embedded-and-links
   (ANY login-uri-template
        []
-       (loginres/login-res @conn
-                           user-partition
-                           user-partition
+       (loginres/login-res db-spec
                            usermt-subtype-prefix
                            userhdr-auth-token
                            userhdr-error-mask
                            base-url
                            entity-uri-prefix
-                           userhdr-apptxn-id
-                           userhdr-useragent-device-make
-                           userhdr-useragent-device-os
-                           userhdr-useragent-device-os-version
                            (fn [version
                                 base-url
                                 entity-uri-prefix
                                 entity-uri
-                                conn
+                                db-spec
                                 accept-format-ind
-                                user-entid]
+                                user-id]
                              [{:spring :lambs}
                               {:meatball :sub}])
                            (fn [version
                                 base-url
                                 entity-uri-prefix
                                 entity-uri
-                                user-entid]
+                                user-id]
                              (-> {}
                                  (rucore/assoc-link
                                   (rucore/make-abs-link version
@@ -128,11 +108,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fixtures
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-fixtures :each (dtucore/make-db-refresher-fixture-fn db-uri
-                                                          conn
-                                                          user-partition
-                                                          [user-schema-filename
-                                                           apptxn-logging-schema-filename]))
+(use-fixtures :each (fn [f]
+                      (jcore/drop-database db-spec-without-db db-name)
+                      (jcore/create-database db-spec-without-db db-name)
+                      (j/db-do-commands db-spec
+                                        true
+                                        uddl/schema-version-ddl
+                                        uddl/v0-create-user-account-ddl
+                                        uddl/v0-add-unique-constraint-user-account-email
+                                        uddl/v0-add-unique-constraint-user-account-username
+                                        uddl/v0-create-authentication-token-ddl
+                                        uddl/v0-add-column-user-account-updated-w-auth-token)
+                      (jcore/with-try-catch-exec-as-query db-spec
+                        (uddl/v0-create-updated-count-inc-trigger-function-fn db-spec))
+                      (jcore/with-try-catch-exec-as-query db-spec
+                        (uddl/v0-create-user-account-updated-count-trigger-fn db-spec))
+                      (f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The Tests
@@ -146,11 +137,7 @@
                                         "json"
                                         "en-US"
                                         :post
-                                        login-uri-template
-                                        userhdr-apptxn-id
-                                        userhdr-useragent-device-make
-                                        userhdr-useragent-device-os
-                                        userhdr-useragent-device-os-version)
+                                        login-uri-template)
                 (mock/body (json/write-str credentials))
                 (mock/content-type (rucore/content-type rumeta/mt-type
                                                         (meta/mt-subtype-user usermt-subtype-prefix)
@@ -166,7 +153,7 @@
             user-location-str (get hdrs "location")]
         (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
         (is (not (nil? resp-body-stream)))
-        (let [resp-user-entid-str (rtucore/last-url-part user-location-str)
+        (let [resp-user-id-str (rtucore/last-url-part user-location-str)
               pct (rucore/parse-media-type (get hdrs "Content-Type"))
               charset (get rumeta/char-sets (:charset pct))
               resp-user (rucore/read-res pct resp-body-stream charset)
@@ -176,36 +163,18 @@
           (is (= expected-embedded embedded))
           (is (= expected-links links))
           (is (not (nil? auth-token)))
-          (is (not (nil? resp-user-entid-str)))
+          (is (not (nil? resp-user-id-str)))
           (is (not (nil? resp-user)))
-          (is (not (nil? (get resp-user "last-modified"))))
+          (is (not (nil? (get resp-user "user/created-at"))))
           (is (= "Karen Smith" (get resp-user "user/name")))
           (is (= "smithka@testing.com" (get resp-user "user/email")))
           (is (= "smithk" (get resp-user "user/username")))
           (is (nil? (get resp-user "user/password")))
-          (let [[loaded-user-entid loaded-user-ent] (usercore/load-user-by-authtoken @conn
-                                                                                     (Long/parseLong resp-user-entid-str)
-                                                                                     auth-token)]
-            (is (not (nil? loaded-user-entid)))
-            (is (= (Long/parseLong resp-user-entid-str) loaded-user-entid)))
-          (let [apptxns (apptxncore/all-apptxns @conn)
-                _ (is (= 1 (count apptxns)))
-                apptxn (first apptxns)
-                apptxnlogs (:apptxn/logs apptxn)
-                apptxnlogs (sort-by :apptxnlog/timestamp (vec apptxnlogs))]
-            (is (= userapptxn/apptxn-user-login (:apptxn/usecase apptxn)))
-            (is (= "iPhone" (:apptxn/user-agent-device-make apptxn)))
-            (is (= "iOS" (:apptxn/user-agent-device-os apptxn)))
-            (is (= "8.1.2" (:apptxn/user-agent-device-os-version apptxn)))
-            (is (= 2 (count apptxnlogs)))
-            (is (= 3 (:apptxnlog/usecase-event (first apptxnlogs))))
-            (is (not (nil? (:apptxnlog/timestamp (first apptxnlogs)))))
-            (is (nil? (:apptxnlog/edn-ctx (first apptxnlogs))))
-            (is (nil? (:apptxnlog/in-ctx-err-desc (first apptxnlogs))))
-            (is (= 6 (:apptxnlog/usecase-event (second apptxnlogs))))
-            (is (not (nil? (:apptxnlog/timestamp (second apptxnlogs)))))
-            (is (nil? (:apptxnlog/edn-ctx (second apptxnlogs))))
-            (is (nil? (:apptxnlog/in-ctx-err-desc (second apptxnlogs))))))))))
+          (let [[loaded-user-id loaded-user] (usercore/load-user-by-authtoken db-spec
+                                                                              (Long/parseLong resp-user-id-str)
+                                                                              auth-token)]
+            (is (not (nil? loaded-user-id)))
+            (is (= (Long/parseLong resp-user-id-str) loaded-user-id))))))))
 
 (defn- assert-unauthorized-login
   [app credentials]
@@ -216,11 +185,7 @@
                                         "json"
                                         "en-US"
                                         :post
-                                        login-uri-template
-                                        userhdr-apptxn-id
-                                        userhdr-useragent-device-make
-                                        userhdr-useragent-device-os
-                                        userhdr-useragent-device-os-version)
+                                        login-uri-template)
                 (mock/body (json/write-str credentials))
                 (mock/content-type (rucore/content-type rumeta/mt-type
                                                         (meta/mt-subtype-user usermt-subtype-prefix)
@@ -240,11 +205,7 @@
                                         "json"
                                         "en-US"
                                         :post
-                                        login-uri-template
-                                        userhdr-apptxn-id
-                                        userhdr-useragent-device-make
-                                        userhdr-useragent-device-os
-                                        userhdr-useragent-device-os-version)
+                                        login-uri-template)
                 (mock/body (json/write-str credentials))
                 (mock/content-type (rucore/content-type rumeta/mt-type
                                                         (meta/mt-subtype-user usermt-subtype-prefix)
@@ -255,15 +216,18 @@
     (testing "status code" (is (= 400 (:status resp))))
     (testing "cookies" (is (= (empty? (:cookies resp)))))))
 
-(deftest user-success-login-by-username-with-empty-embedded
-  (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-  (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (utucore/save-new-user @conn
-                         user-partition
-                         {:user/name "Karen Smith"
-                          :user/email "smithka@testing.com"
-                          :user/username "smithk"
-                          :user/password "insecure"})
+#_(deftest user-success-login-by-username-with-empty-embedded
+  (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+  (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+  (j/with-db-transaction [conn db-spec]
+    (let [new-user-id (usercore/next-user-account-id conn)]
+      (usercore/save-new-user conn
+                              new-user-id
+                              {:user/name "Karen Smith"
+                               :user/email "smithka@testing.com"
+                               :user/username "smithk"
+                               :user/created-at (c/to-long (t/now))
+                               :user/password "insecure"})))
   (testing "Successful user login with app txn logs with emtpy embedded."
     (assert-success-login app-with-empty-embedded-and-links
                           {"user/username-or-email" "smithk"
@@ -271,15 +235,18 @@
                           {}
                           {})))
 
-(deftest user-success-login-by-username-with-nonempty-embedded
-  (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-  (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (utucore/save-new-user @conn
-                         user-partition
-                         {:user/name "Karen Smith"
-                          :user/email "smithka@testing.com"
-                          :user/username "smithk"
-                          :user/password "insecure"})
+#_(deftest user-success-login-by-username-with-nonempty-embedded
+  (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+  (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+  (j/with-db-transaction [conn db-spec]
+    (let [new-user-id (usercore/next-user-account-id conn)]
+      (usercore/save-new-user db-spec
+                              new-user-id
+                              {:user/name "Karen Smith"
+                               :user/email "smithka@testing.com"
+                               :user/username "smithk"
+                               :user/created-at (c/to-long (t/now))
+                               :user/password "insecure"})))
   (testing "Successful user login with app txn logs with nonemtpy embedded."
     (assert-success-login app-with-nonempty-embedded-and-links
                           {"user/username-or-email" "smithk"
@@ -289,15 +256,18 @@
                           {"fruit" {"href" "/testing/pears/142"
                                     "type" "application/vnd.fruit-v0.0.1"}})))
 
-(deftest user-success-login-by-email
-  (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-  (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (utucore/save-new-user @conn
-                         user-partition
-                         {:user/name "Karen Smith"
-                          :user/email "smithka@testing.com"
-                          :user/username "smithk"
-                          :user/password "insecure"})
+#_(deftest user-success-login-by-email
+  (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+  (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+  (j/with-db-transaction [conn db-spec]
+    (let [new-user-id (usercore/next-user-account-id conn)]
+      (usercore/save-new-user db-spec
+                              new-user-id
+                              {:user/name "Karen Smith"
+                               :user/email "smithka@testing.com"
+                               :user/username "smithk"
+                               :user/created-at (c/to-long (t/now))
+                               :user/password "insecure"})))
   (testing "Successful user login with app txn logs."
     (assert-success-login app-with-empty-embedded-and-links
                           {"user/username-or-email" "smithka@testing.com"
@@ -305,51 +275,60 @@
                           {}
                           {})))
 
-(deftest unsuccessful-login-wrong-password
-  (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-  (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (utucore/save-new-user @conn
-                         user-partition
-                         {:user/name "Karen Smith"
-                          :user/email "smithka@testing.com"
-                          :user/username "smithk"
-                          :user/password "insecure"})
+#_(deftest unsuccessful-login-wrong-password
+  (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+  (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+  (j/with-db-transaction [conn db-spec]
+    (let [new-user-id (usercore/next-user-account-id conn)]
+      (usercore/save-new-user db-spec
+                              new-user-id
+                              {:user/name "Karen Smith"
+                               :user/email "smithka@testing.com"
+                               :user/username "smithk"
+                               :user/created-at (c/to-long (t/now))
+                               :user/password "insecure"})))
   (testing "Unsuccessful user login with app txn logs."
     (assert-unauthorized-login app-with-empty-embedded-and-links
                                {"user/username-or-email" "smithk"
                                 "user/password" "in5ecure"})))
 
-(deftest unsuccessful-login-no-users-in-db
-  (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-  (is (nil? (usercore/load-user-by-username @conn "smithk")))
+#_(deftest unsuccessful-login-no-users-in-db
+  (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+  (is (nil? (usercore/load-user-by-username db-spec "smithk")))
   (testing "Unsuccessful user login with app txn logs."
     (assert-unauthorized-login app-with-empty-embedded-and-links
                                {"user/username-or-email" "smithk"
                                 "user/password" "insecure"})))
 
-(deftest unsuccessful-login-wrong-username
-  (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-  (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (utucore/save-new-user @conn
-                         user-partition
-                         {:user/name "Karen Smith"
-                          :user/email "smithka@testing.com"
-                          :user/username "smithk"
-                          :user/password "insecure"})
+#_(deftest unsuccessful-login-wrong-username
+  (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+  (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+  (j/with-db-transaction [conn db-spec]
+    (let [new-user-id (usercore/next-user-account-id conn)]
+      (usercore/save-new-user db-spec
+                              new-user-id
+                              {:user/name "Karen Smith"
+                               :user/email "smithka@testing.com"
+                               :user/username "smithk"
+                               :user/created-at (c/to-long (t/now))
+                               :user/password "insecure"})))
   (testing "Unsuccessful user login with app txn logs."
     (assert-unauthorized-login app-with-empty-embedded-and-links
                                {"user/username-or-email" "smithka"
                                 "user/password" "insecure"})))
 
-(deftest unsuccessful-login-malformed-0
-  (is (nil? (usercore/load-user-by-email @conn "smithka@testing.com")))
-  (is (nil? (usercore/load-user-by-username @conn "smithk")))
-  (utucore/save-new-user @conn
-                         user-partition
-                         {:user/name "Karen Smith"
-                          :user/email "smithka@testing.com"
-                          :user/username "smithk"
-                          :user/password "insecure"})
+#_(deftest unsuccessful-login-malformed-0
+  (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+  (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+  (j/with-db-transaction [conn db-spec]
+    (let [new-user-id (usercore/next-user-account-id conn)]
+      (usercore/save-new-user db-spec
+                              new-user-id
+                              {:user/name "Karen Smith"
+                               :user/email "smithka@testing.com"
+                               :user/username "smithk"
+                               :user/created-at (c/to-long (t/now))
+                               :user/password "insecure"})))
   (testing "Unsuccessful malformed user login with app txn logs 0."
     (assert-malformed-login app-with-empty-embedded-and-links
                             {"user/username-or-email" "smithka"})))

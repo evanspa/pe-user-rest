@@ -5,17 +5,27 @@
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]))
 
-(def user-schema-filename "user-schema-updates-0.0.1.dtm")
-(def apptxn-logging-schema-filename "apptxn-logging-schema-updates-0.0.1.dtm")
-(def db-uri "datomic:mem://user")
-(def user-partition :user)
+(def db-name "test_db")
+
+(defn db-spec-fn
+  ([]
+   (db-spec-fn nil))
+  ([db-name]
+   (let [subname-prefix "//localhost:5432/"]
+     {:classname "org.postgresql.Driver"
+      :subprotocol "postgresql"
+      :subname (if db-name
+                 (str subname-prefix db-name)
+                 subname-prefix)
+      :user "postgres"})))
+
+(def db-spec-without-db (db-spec-fn nil))
+
+(def db-spec (db-spec-fn db-name))
+
 (def usermt-subtype-prefix "vnd.")
 (def userhdr-auth-token "user-rest-auth-token")
 (def userhdr-error-mask "user-rest-error-mask")
-(def userhdr-apptxn-id "user-apptxn-id")
-(def userhdr-useragent-device-make "user-rest-useragent-device-make")
-(def userhdr-useragent-device-os "user-rest-useragent-device-os")
-(def userhdr-useragent-device-os-version "user-rest-useragent-device-os-version")
 (def base-url "")
 (def entity-uri-prefix "/testing/")
 (def userhdr-establish-session "user-establish-session")
