@@ -35,8 +35,7 @@
    _   ;for 'users' resource, the 'in' would only ever be a NEW (to-be-created) user, so it by definition wouldn't have an entid
    user]
   (-> user
-      (assoc :user/created-at (c/from-long (Long. (:user/created-at user)))))
-  (identity user))
+      (assoc :user/created-at (c/from-long (Long. (:user/created-at user))))))
 
 (defmethod body-data-out-transform-fn meta/v001
   [version
