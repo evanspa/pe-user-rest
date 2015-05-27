@@ -32,7 +32,7 @@ pe-user-rest is available from Clojars.  Add the following dependency to your
 `project.clj` file:
 
 ```
-[pe-user-rest "0.0.9"]
+[pe-user-rest "0.0.10"]
 ```
 
 ## pe-* Clojure Library Suite
@@ -48,7 +48,7 @@ of various collection-related, date-related and other helpers functions.
 + **[pe-datomic-testutils](https://github.com/evanspa/pe-datomic-testutils)**: provides
   a set of helper functions to aid in unit testing Datomic-enabled functions.
 + **[pe-user-core](https://github.com/evanspa/pe-user-core)**: provides
-  a set of functions for modeling a generic user, leveraging Datomic as a
+  a set of functions for modeling a generic user, leveraging PostgreSQL as a
   backend store.
 + **[pe-user-testutils](https://github.com/evanspa/pe-user-testutils)**: a set of helper functions to aid in unit testing
 code that depends on the functionality of the pe-user-* libraries
@@ -58,7 +58,7 @@ code that depends on the functionality of the pe-user-* libraries
   PEAppTransaction Logging Framework.
 + **[pe-rest-utils](https://github.com/evanspa/pe-rest-utils)**: provides a set
   of functions for building easy-to-version hypermedia REST services (built on
-  top of [Liberator](http://clojure-liberator.github.io/liberator/).
+  top of [Liberator](http://clojure-liberator.github.io/liberator/)).
 + **[pe-rest-testutils](https://github.com/evanspa/pe-rest-testutils)**: provides
   a set of helper functions for unit testing web services.
 + **pe-user-rest**: this library.
