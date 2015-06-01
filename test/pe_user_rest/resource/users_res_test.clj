@@ -36,7 +36,7 @@
    base-url
    entity-uri-prefix
    entity-uri
-   conn
+   db-spec
    accept-format-ind
    user-entid]
   {})
