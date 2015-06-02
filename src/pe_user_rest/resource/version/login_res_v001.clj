@@ -56,7 +56,7 @@
                 user (-> (into {:last-modified (c/to-long (:user/updated-at user))} user)
                          (ucore/trim-keys [:user/hashed-password])
                          (merge-links-fn user-id)
-                         (merge-embedded-fn user))
+                         (merge-embedded-fn user-id))
                 plaintext-token (usercore/create-and-save-auth-token db-spec user-id new-token-id)]
             {:status 200
              :do-entity user
@@ -66,7 +66,5 @@
                                                           meta/pathcomp-users
                                                           user-id))
              :auth-token plaintext-token})
-          (do
-            {:status 401})))
-      (do
-        {:status 400}))))
+          {:status 401}))
+      {:status 400})))
