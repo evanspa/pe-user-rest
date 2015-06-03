@@ -99,7 +99,6 @@
     (let [user {"user/name" "Karen Smith"
                 "user/email" "smithka@testing.com"
                 "user/username" "smithk"
-                "user/created-at" (c/to-long (t/now))
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                           (meta/mt-subtype-user usermt-subtype-prefix)
@@ -151,7 +150,6 @@
     (is (nil? (usercore/load-user-by-username db-spec "smithk")))
     (let [user {"user/name" "Karen Smith"
                 "user/email" "smithka@testing.com"
-                "user/created-at" (c/to-long (t/now))
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                           (meta/mt-subtype-user usermt-subtype-prefix)
@@ -203,7 +201,6 @@
     (is (nil? (usercore/load-user-by-username db-spec "smithk")))
     (let [user {"user/name" "Karen Smith"
                 "user/username" "smithk"
-                "user/created-at" (c/to-long (t/now))
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                           (meta/mt-subtype-user usermt-subtype-prefix)
@@ -260,12 +257,10 @@
                                 {:user/name "Karen Smith"
                                  :user/email "smithka@testing.com"
                                  :user/username "smithk"
-                                 :user/created-at (c/to-long (t/now))
                                  :user/password "insecure"})))
     (let [user {"user/name" "Karen K. Smith"
                 "user/username" "karenksmith"
                 "user/email" "smithka@testing.com"
-                "user/created-at" (c/to-long (t/now))
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                           (meta/mt-subtype-user usermt-subtype-prefix)
@@ -308,12 +303,10 @@
                                 {:user/name "Karen Smith"
                                  :user/email "smithka@testing.com"
                                  :user/username "smithk"
-                                 :user/created-at (c/to-long (t/now))
                                  :user/password "insecure"})))
     (let [user {"user/name" "Karen K. Smith"
                 "user/username" "smithk"
                 "user/email" "karenksmith@testing.com"
-                "user/created-at" (c/to-long (t/now))
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                           (meta/mt-subtype-user usermt-subtype-prefix)
@@ -353,7 +346,6 @@
     (with-redefs [usercore/load-user-by-email (fn [conn email] (throw (Exception. "exception")))]
       (let [user {"user/name" "Karen Smith"
                   "user/email" "smithka@testing.com"
-                  "user/created-at" (c/to-long (t/now))
                   "user/username" "smithk"
                   "user/password" "insecure"}
             req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
