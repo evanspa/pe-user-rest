@@ -11,7 +11,7 @@
                  [org.clojure/data.json "0.2.5"]
                  [compojure "1.2.1"]
                  [liberator "0.12.2"]
-                 [pe-rest-utils "0.0.10"]
+                 [pe-rest-utils "0.0.12"]
                  [pe-user-core "0.1.12"]
                  [pe-core-utils "0.0.11"]
                  [ch.qos.logback/logback-classic "1.0.13"]
