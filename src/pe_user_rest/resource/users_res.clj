@@ -49,15 +49,15 @@
                               links-fn
                               []
                               new-user-validator-fn
-                              userval/snu-any-issues
+                              userval/su-any-issues
                               body-data-in-transform-fn
                               body-data-out-transform-fn
                               [[extract-email-fn
                                 get-user-by-email-fn
-                                userval/snu-email-already-registered]
+                                userval/su-email-already-registered]
                                [extract-username-fn
                                 get-user-by-username-fn
-                                userval/snu-username-already-registered]]
+                                userval/su-username-already-registered]]
                               next-user-account-id-fn
                               save-new-user-fn
                               nil

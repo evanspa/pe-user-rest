@@ -24,6 +24,8 @@
 (def db-spec (db-spec-fn db-name))
 
 (def usermt-subtype-prefix "vnd.")
+(def user-auth-scheme "user-auth")
+(def user-auth-scheme-param-name "user-user-token")
 (def userhdr-auth-token "user-rest-auth-token")
 (def userhdr-error-mask "user-rest-error-mask")
 (def base-url "")
@@ -35,6 +37,12 @@
                              (format "%s/%s"
                                      entity-uri-prefix
                                      meta/pathcomp-users)))
+
+(def user-uri-template
+  (format "%s%s%s/:user-id"
+          base-url
+          entity-uri-prefix
+          meta/pathcomp-users))
 
 (def login-uri-template
   (rucore/make-abs-link-href base-url

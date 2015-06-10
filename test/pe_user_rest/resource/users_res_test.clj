@@ -289,8 +289,8 @@
             (is (not (nil? error-mask-str)))
             (is (nil? (usercore/load-user-by-username db-spec "karenksmith")))
             (let [error-mask (Long/parseLong error-mask-str)]
-              (is (pos? (bit-and error-mask userval/snu-any-issues)))
-              (is (pos? (bit-and error-mask userval/snu-email-already-registered))))))))))
+              (is (pos? (bit-and error-mask userval/su-any-issues)))
+              (is (pos? (bit-and error-mask userval/su-email-already-registered))))))))))
 
 (deftest failed-user-creation-pre-existing-username
   (testing "Unsuccessful creation of user."
@@ -336,8 +336,8 @@
             (is (nil? (usercore/load-user-by-email db-spec "karenksmith@testing.com")))
             (log/debug "error-mask-str: " error-mask-str)
             (let [error-mask (Long/parseLong error-mask-str)]
-              (is (pos? (bit-and error-mask userval/snu-any-issues)))
-              (is (pos? (bit-and error-mask userval/snu-username-already-registered))))))))))
+              (is (pos? (bit-and error-mask userval/su-any-issues)))
+              (is (pos? (bit-and error-mask userval/su-username-already-registered))))))))))
 
 (deftest failed-user-creation-simulated-server-error
   (testing "Unsuccessful creation of user."
