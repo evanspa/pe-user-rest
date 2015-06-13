@@ -239,6 +239,53 @@
               (is (= "Kate A. Smithward II" (:user/name loaded-user)))
               (is (= "kates2" (:user/username loaded-user)))
               (is (= "kate@testing.com" (:user/email loaded-user))))))
+        ;; Update the user yet again
+        (let [user {"user/name" "Kate A. Smithward II"
+                    "user/username" "kates2"
+                    "user/email" nil}
+              user-uri (str base-url
+                                entity-uri-prefix
+                                usermeta/pathcomp-users
+                                "/"
+                                resp-user-id-str)
+              req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                              (meta/mt-subtype-user usermt-subtype-prefix)
+                                              meta/v001
+                                              "UTF-8;q=1,ISO-8859-1;q=0"
+                                              "json"
+                                              "en-US"
+                                              :put
+                                              user-uri)
+                      (mock/body (json/write-str user))
+                      (mock/content-type (rucore/content-type rumeta/mt-type
+                                                              (meta/mt-subtype-user usermt-subtype-prefix)
+                                                              meta/v001
+                                                              "json"
+                                                              "UTF-8"))
+                      (rtucore/header "Authorization" (rtucore/authorization-req-hdr-val user-auth-scheme
+                                                                                         user-auth-scheme-param-name
+                                                                                         auth-token)))
+              resp (app req)
+              hdrs (:headers resp)]
+          (testing "status code" (is (= 200 (:status resp))))
+          (testing "body of updated user"
+            (let [hdrs (:headers resp)
+              resp-body-stream (:body resp)]
+              (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
+              (is (not (nil? resp-body-stream)))
+              (let [pct (rucore/parse-media-type (get hdrs "Content-Type"))
+                    charset (get rumeta/char-sets (:charset pct))
+                    resp-user (rucore/read-res pct resp-body-stream charset)]
+                (is (not (nil? resp-user)))
+                (is (= "Kate A. Smithward II" (get resp-user "user/name"))))))
+          (testing "load updated user directly from database"
+            (let [[loaded-user-id loaded-user] (usercore/load-user-by-id db-spec
+                                                                         (Long/parseLong resp-user-id-str))]
+              (is (not (nil? loaded-user-id)))
+              (is (= (Long/parseLong resp-user-id-str) loaded-user-id))
+              (is (= "Kate A. Smithward II" (:user/name loaded-user)))
+              (is (= "kates2" (:user/username loaded-user)))
+              (is (nil? (:user/email loaded-user))))))
         ;; Update the user again with invalid request
         (let [user {"user/name" "Kate A. Smithward II"
                     "user/username" ""
