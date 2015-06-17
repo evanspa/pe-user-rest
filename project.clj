@@ -12,14 +12,14 @@
                  [compojure "1.2.1"]
                  [liberator "0.12.2"]
                  [pe-rest-utils "0.0.12"]
-                 [pe-user-core "0.1.14"]
+                 [pe-user-core "0.1.15"]
                  [pe-core-utils "0.0.11"]
                  [ch.qos.logback/logback-classic "1.0.13"]
                  [org.slf4j/slf4j-api "1.7.5"]
                  [clj-time "0.8.0"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
-          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.18/"
+          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.19/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:source-paths ["dev"]  ;ensures 'user.clj' gets auto-loaded
                    :plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]
