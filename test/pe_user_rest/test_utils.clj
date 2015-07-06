@@ -49,3 +49,9 @@
                              (format "%s/%s"
                                      entity-uri-prefix
                                      meta/pathcomp-login)))
+
+(def light-login-uri-template
+  (rucore/make-abs-link-href base-url
+                             (format "%s/%s"
+                                     entity-uri-prefix
+                                     meta/pathcomp-light-login)))

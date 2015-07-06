@@ -12,7 +12,8 @@
             [pe-user-rest.meta :as meta]
             [pe-user-rest.resource.login-res :refer [body-data-in-transform-fn
                                                      body-data-out-transform-fn
-                                                     do-login-fn]]))
+                                                     do-login-fn
+                                                     do-light-login-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 body-data transformation functions
@@ -60,6 +61,36 @@
                 plaintext-token (usercore/create-and-save-auth-token db-spec user-id new-token-id)]
             {:status 200
              :do-entity user
+             :location (rucore/make-abs-link-href base-url
+                                                  (format "%s%s/%s"
+                                                          entity-uri-prefix
+                                                          meta/pathcomp-users
+                                                          user-id))
+             :auth-token plaintext-token})
+          {:status 401}))
+      {:status 400})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 0.0.1 do light login function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmethod do-light-login-fn meta/v001
+  [version
+   db-spec
+   base-url
+   entity-uri-prefix
+   light-login-uri
+   body-data
+   merge-embedded-fn
+   merge-links-fn]
+  (let [{username-or-email :user/username-or-email
+         password :user/password} body-data]
+    (if (and (not (nil? username-or-email))
+             (not (nil? password)))
+      (let [[user-id _] (usercore/authenticate-user-by-password db-spec username-or-email password)]
+        (if (not (nil? user-id))
+          (let [new-token-id (usercore/next-auth-token-id db-spec)
+                plaintext-token (usercore/create-and-save-auth-token db-spec user-id new-token-id)]
+            {:status 204
              :location (rucore/make-abs-link-href base-url
                                                   (format "%s%s/%s"
                                                           entity-uri-prefix
