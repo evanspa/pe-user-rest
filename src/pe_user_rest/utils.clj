@@ -5,6 +5,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-plaintext-auth-token
+  [ctx scheme scheme-param-name]
+  (let [authorization (get-in ctx [:request :headers "authorization"])
+        [_
+         _
+         auth-scheme-param-value] (rucore/parse-auth-header authorization
+                                                            scheme
+                                                            scheme-param-name)]
+    auth-scheme-param-value))
+
 (defn authorized?
   [ctx conn user-entid scheme scheme-param-name]
   (let [authorization (get-in ctx [:request :headers "authorization"])]

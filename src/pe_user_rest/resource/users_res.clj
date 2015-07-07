@@ -48,6 +48,7 @@
                               embedded-resources-fn
                               links-fn
                               []
+                              nil ; plain text auth-token (not relevant here)
                               new-user-validator-fn
                               userval/su-any-issues
                               body-data-in-transform-fn

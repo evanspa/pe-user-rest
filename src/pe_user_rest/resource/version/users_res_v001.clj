@@ -81,7 +81,11 @@
 ;; 0.0.1 Save new user function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod save-new-user-fn meta/v001
-  [version db-spec new-user-id user]
+  [version
+   db-spec
+   _ ; plain text auth-token (not relevant; always null)
+   new-user-id
+   user]
   (usercore/save-new-user db-spec new-user-id user))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

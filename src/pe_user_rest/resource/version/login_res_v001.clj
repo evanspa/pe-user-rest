@@ -44,6 +44,7 @@
    base-url
    entity-uri-prefix
    login-uri
+   _ ; plaintext-auth-token not relevant (is nil)
    body-data
    merge-embedded-fn
    merge-links-fn]
@@ -79,6 +80,7 @@
    base-url
    entity-uri-prefix
    light-login-uri
+   _ ; plaintext-auth-token not relevant (is nil)
    body-data
    merge-embedded-fn
    merge-links-fn]
