@@ -16,6 +16,14 @@
                                                             scheme-param-name)]
     auth-scheme-param-value))
 
+(defn become-unauthenticated
+  ([db-spec user-id plaintext-auth-token]
+   (become-unauthenticated db-spec user-id plaintext-auth-token nil))
+  ([db-spec user-id plaintext-auth-token reason]
+   (do
+     (usercore/invalidate-user-token db-spec user-id plaintext-auth-token reason)
+     (throw (ex-info nil {:cause :became-unauthenticated})))))
+
 (defn authorized?
   [ctx conn user-entid scheme scheme-param-name]
   (let [authorization (get-in ctx [:request :headers "authorization"])]
