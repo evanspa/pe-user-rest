@@ -16,10 +16,10 @@
                  [clj-time "0.8.0"]
                  [pe-core-utils "0.0.11"]
                  [pe-user-core "0.1.18"]
-                 [pe-rest-utils "0.0.20"]]
+                 [pe-rest-utils "0.0.19"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
-          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.23/"
+          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.24/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:source-paths ["dev"]  ;ensures 'user.clj' gets auto-loaded
                    :plugins [[cider/cider-nrepl "0.10.0-SNAPSHOT"]
