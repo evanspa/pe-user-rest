@@ -48,5 +48,6 @@
    db-spec
    user-id
    plaintext-auth-token ; in case you want to invalidate it
-   user]
-  (usercore/save-user db-spec user-id user))
+   user
+   if-unmodified-since]
+  (usercore/save-user db-spec user-id plaintext-auth-token user if-unmodified-since))

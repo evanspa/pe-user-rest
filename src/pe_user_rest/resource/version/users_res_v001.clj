@@ -11,10 +11,6 @@
             [pe-user-rest.resource.users-res :refer [new-user-validator-fn
                                                      body-data-in-transform-fn
                                                      body-data-out-transform-fn
-                                                     extract-email-fn
-                                                     extract-username-fn
-                                                     get-user-by-email-fn
-                                                     get-user-by-username-fn
                                                      next-user-account-id-fn
                                                      save-new-user-fn
                                                      make-session-fn]]))
@@ -47,28 +43,6 @@
       (ucore/transform-map-val :user/created-at #(c/to-long %))
       (ucore/transform-map-val :user/updated-at #(c/to-long %))
       (ucore/transform-map-val :user/verified-at #(c/to-long %))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 0.0.1 Name extraction functions
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defmethod extract-email-fn meta/v001
-  [version user]
-  (:user/email user))
-
-(defmethod extract-username-fn meta/v001
-  [version user]
-  (:user/username user))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 0.0.1 Entity lookup-by-name functions
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defmethod get-user-by-email-fn meta/v001
-  [version db-spec email]
-  (usercore/load-user-by-email db-spec email))
-
-(defmethod get-user-by-username-fn meta/v001
-  [version db-spec username]
-  (usercore/load-user-by-username db-spec username))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 Next user account id function

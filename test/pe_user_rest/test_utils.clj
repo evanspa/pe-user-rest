@@ -28,6 +28,7 @@
 (def user-auth-scheme-param-name "user-user-token")
 (def userhdr-auth-token "user-rest-auth-token")
 (def userhdr-error-mask "user-rest-error-mask")
+(def userhdr-if-unmodified-since "user-if-unmodified-since")
 (def base-url "")
 (def entity-uri-prefix "/testing/")
 (def userhdr-establish-session "user-establish-session")

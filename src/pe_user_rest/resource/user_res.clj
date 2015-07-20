@@ -26,7 +26,8 @@
    user-id
    plaintext-auth-token
    embedded-resources-fn
-   links-fn]
+   links-fn
+   if-unmodified-since-hdr]
   (rucore/put-or-post-invoker ctx
                               :put
                               db-spec
@@ -43,11 +44,11 @@
                               body-data-out-transform-fn
                               nil
                               nil
-                              nil
                               save-user-fn
                               nil
                               nil
-                              nil))
+                              nil
+                              if-unmodified-since-hdr))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Validator function
@@ -79,7 +80,8 @@
    entity-uri-prefix
    user-id
    embedded-resources-fn
-   links-fn]
+   links-fn
+   if-unmodified-since-hdr]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -105,7 +107,8 @@
                                                                            auth-scheme
                                                                            auth-scheme-param-name)
                                     embedded-resources-fn
-                                    links-fn))
+                                    links-fn
+                                    if-unmodified-since-hdr))
   :handle-ok (fn [ctx] (rucore/handle-resp ctx
                                            hdr-auth-token
                                            hdr-error-mask)))

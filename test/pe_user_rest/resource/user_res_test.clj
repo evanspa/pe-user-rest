@@ -30,6 +30,7 @@
                                              userhdr-auth-token
                                              userhdr-error-mask
                                              userhdr-establish-session
+                                             userhdr-if-unmodified-since
                                              entity-uri-prefix
                                              user-uri-template
                                              users-uri-template
@@ -80,7 +81,8 @@
                          entity-uri-prefix
                          (Long. user-id)
                          empty-embedded-resources-fn
-                         empty-links-fn)))
+                         empty-links-fn
+                         userhdr-if-unmodified-since)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Middleware-decorated app
@@ -240,7 +242,8 @@
               (is (= "kates2" (:user/username loaded-user)))
               (is (= "kate@testing.com" (:user/email loaded-user))))))
         ;; Update the user yet again
-        (let [user {"user/name" "Kate A. Smithward II"
+        (let [[_ loaded-user] (usercore/load-user-by-email db-spec "kate@testing.com")
+              user {"user/name" "Kate A. Smithward II"
                     "user/username" "kates2"
                     "user/email" nil}
               user-uri (str base-url
@@ -262,6 +265,7 @@
                                                               meta/v001
                                                               "json"
                                                               "UTF-8"))
+                      (rtucore/header userhdr-if-unmodified-since (str (c/to-long (:user/updated-at loaded-user))))
                       (rtucore/header "Authorization" (rtucore/authorization-req-hdr-val user-auth-scheme
                                                                                          user-auth-scheme-param-name
                                                                                          auth-token)))
@@ -322,4 +326,66 @@
               (is (not (nil? error-mask-str)))
               (let [error-mask (Long/parseLong error-mask-str)]
                 (is (pos? (bit-and error-mask userval/su-any-issues)))
-                (is (pos? (bit-and error-mask userval/su-username-and-email-not-provided)))))))))))
+                (is (pos? (bit-and error-mask userval/su-username-and-email-not-provided)))))))
+        ;; Update the user with a bad user-if-modified-since header that is way off
+        (let [user {"user/name" "Kate A. Smithward II"
+                    "user/username" "kates2"
+                    "user/email" nil}
+              user-uri (str base-url
+                                entity-uri-prefix
+                                usermeta/pathcomp-users
+                                "/"
+                                resp-user-id-str)
+              req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                              (meta/mt-subtype-user usermt-subtype-prefix)
+                                              meta/v001
+                                              "UTF-8;q=1,ISO-8859-1;q=0"
+                                              "json"
+                                              "en-US"
+                                              :put
+                                              user-uri)
+                      (mock/body (json/write-str user))
+                      (mock/content-type (rucore/content-type rumeta/mt-type
+                                                              (meta/mt-subtype-user usermt-subtype-prefix)
+                                                              meta/v001
+                                                              "json"
+                                                              "UTF-8"))
+                      (rtucore/header userhdr-if-unmodified-since (str (c/to-long (t/minus (t/now) (t/weeks 1)))))
+                      (rtucore/header "Authorization" (rtucore/authorization-req-hdr-val user-auth-scheme
+                                                                                         user-auth-scheme-param-name
+                                                                                         auth-token)))
+              resp (app req)
+              hdrs (:headers resp)]
+          (testing "status code" (is (= 409 (:status resp)))))
+        ;; Update the user with a bad user-if-modified-since header that is barely off
+        (let [[_ loaded-user] (usercore/load-user-by-username db-spec "kates2")
+              user {"user/name" "Kate A. Smithward II"
+                    "user/username" "kates2"
+                    "user/email" nil}
+              user-uri (str base-url
+                                entity-uri-prefix
+                                usermeta/pathcomp-users
+                                "/"
+                                resp-user-id-str)
+              req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                              (meta/mt-subtype-user usermt-subtype-prefix)
+                                              meta/v001
+                                              "UTF-8;q=1,ISO-8859-1;q=0"
+                                              "json"
+                                              "en-US"
+                                              :put
+                                              user-uri)
+                      (mock/body (json/write-str user))
+                      (mock/content-type (rucore/content-type rumeta/mt-type
+                                                              (meta/mt-subtype-user usermt-subtype-prefix)
+                                                              meta/v001
+                                                              "json"
+                                                              "UTF-8"))
+                      (rtucore/header userhdr-if-unmodified-since (str (c/to-long (t/minus (:user/updated-at loaded-user)
+                                                                                           (t/seconds 1)))))
+                      (rtucore/header "Authorization" (rtucore/authorization-req-hdr-val user-auth-scheme
+                                                                                         user-auth-scheme-param-name
+                                                                                         auth-token)))
+              resp (app req)
+              hdrs (:headers resp)]
+          (testing "status code" (is (= 409 (:status resp)))))))))

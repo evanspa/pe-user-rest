@@ -11,18 +11,18 @@
                  [org.clojure/data.json "0.2.5"]
                  [compojure "1.2.1"]
                  [liberator "0.12.2"]
-                 [pe-rest-utils "0.0.19"]
-                 [pe-user-core "0.1.15"]
-                 [pe-core-utils "0.0.11"]
                  [ch.qos.logback/logback-classic "1.0.13"]
                  [org.slf4j/slf4j-api "1.7.5"]
-                 [clj-time "0.8.0"]]
+                 [clj-time "0.8.0"]
+                 [pe-core-utils "0.0.11"]
+                 [pe-user-core "0.1.18"]
+                 [pe-rest-utils "0.0.20"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
           :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.23/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:source-paths ["dev"]  ;ensures 'user.clj' gets auto-loaded
-                   :plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]
+                   :plugins [[cider/cider-nrepl "0.10.0-SNAPSHOT"]
                              [lein-ring "0.8.13"]]
                    :resource-paths ["test-resources"]
                    :dependencies [[org.clojure/tools.namespace "0.2.7"]

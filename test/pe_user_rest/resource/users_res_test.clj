@@ -278,7 +278,7 @@
                                                           "json"
                                                           "UTF-8")))
           resp (app req)]
-      (testing "status code" (is (= 403 (:status resp))))
+      (testing "status code" (is (= 422 (:status resp))))
       (testing "headers and body of created user"
         (let [hdrs (:headers resp)
               user-location-str (get hdrs "location")]
@@ -324,7 +324,7 @@
                                                           "json"
                                                           "UTF-8")))
           resp (app req)]
-      (testing "status code" (is (= 403 (:status resp))))
+      (testing "status code" (is (= 422 (:status resp))))
       (testing "headers and body of created user"
         (let [hdrs (:headers resp)
               user-location-str (get hdrs "location")]
@@ -334,7 +334,6 @@
             (is (nil? (get hdrs userhdr-auth-token)))
             (is (not (nil? error-mask-str)))
             (is (nil? (usercore/load-user-by-email db-spec "karenksmith@testing.com")))
-            (log/debug "error-mask-str: " error-mask-str)
             (let [error-mask (Long/parseLong error-mask-str)]
               (is (pos? (bit-and error-mask userval/su-any-issues)))
               (is (pos? (bit-and error-mask userval/su-username-already-registered))))))))))
@@ -343,7 +342,7 @@
   (testing "Unsuccessful creation of user."
     (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
     (is (nil? (usercore/load-user-by-username db-spec "smithk")))
-    (with-redefs [usercore/load-user-by-email (fn [conn email] (throw (Exception. "exception")))]
+    (with-redefs [usercore/save-new-user (fn [db-spec new-id user] (throw (Exception. "exception")))]
       (let [user {"user/name" "Karen Smith"
                   "user/email" "smithka@testing.com"
                   "user/username" "smithk"
