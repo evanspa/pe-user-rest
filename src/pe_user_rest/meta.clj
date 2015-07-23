@@ -24,6 +24,7 @@
 (def pathcomp-users "users")
 (def pathcomp-login "login")
 (def pathcomp-light-login "light-login")
+(def pathcomp-logout "logout")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Information about this REST API, including supported content

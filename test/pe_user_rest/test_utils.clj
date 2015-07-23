@@ -1,6 +1,7 @@
 (ns pe-user-rest.test-utils
   (:require [pe-user-rest.resource.version.login-res-v001]
             [pe-user-rest.resource.version.users-res-v001]
+            [pe-user-rest.resource.version.logout-res-v001]
             [pe-user-rest.meta :as meta]
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]))
@@ -35,7 +36,7 @@
 
 (def users-uri-template
   (rucore/make-abs-link-href base-url
-                             (format "%s/%s"
+                             (format "%s%s"
                                      entity-uri-prefix
                                      meta/pathcomp-users)))
 
@@ -47,12 +48,19 @@
 
 (def login-uri-template
   (rucore/make-abs-link-href base-url
-                             (format "%s/%s"
+                             (format "%s%s"
                                      entity-uri-prefix
                                      meta/pathcomp-login)))
 
+(def logout-uri-template
+  (format "%s%s%s/:user-id/%s"
+          base-url
+          entity-uri-prefix
+          meta/pathcomp-users
+          meta/pathcomp-logout))
+
 (def light-login-uri-template
   (rucore/make-abs-link-href base-url
-                             (format "%s/%s"
+                             (format "%s%s"
                                      entity-uri-prefix
                                      meta/pathcomp-light-login)))

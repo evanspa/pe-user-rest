@@ -21,7 +21,6 @@
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]
             [pe-user-core.core :as usercore]
-            [pe-user-rest.meta :as usermeta]
             [pe-user-core.validation :as userval]
             [pe-user-rest.test-utils :refer [usermt-subtype-prefix
                                              user-auth-scheme
@@ -104,11 +103,19 @@
                                         uddl/v0-create-user-account-ddl
                                         uddl/v0-add-unique-constraint-user-account-email
                                         uddl/v0-add-unique-constraint-user-account-username
-                                        uddl/v0-create-authentication-token-ddl)
+                                        uddl/v0-create-authentication-token-ddl
+                                        uddl/v1-user-add-deleted-reason-col
+                                        uddl/v1-user-add-suspended-at-col
+                                        uddl/v1-user-add-suspended-reason-col
+                                        uddl/v1-user-add-suspended-count-col)
                       (jcore/with-try-catch-exec-as-query db-spec
-                        (uddl/v0-create-updated-count-inc-trigger-function-fn db-spec))
+                        (uddl/v0-create-updated-count-inc-trigger-fn db-spec))
                       (jcore/with-try-catch-exec-as-query db-spec
                         (uddl/v0-create-user-account-updated-count-trigger-fn db-spec))
+                      (jcore/with-try-catch-exec-as-query db-spec
+                        (uddl/v1-create-suspended-count-inc-trigger-fn db-spec))
+                      (jcore/with-try-catch-exec-as-query db-spec
+                        (uddl/v1-create-user-account-suspended-count-trigger-fn db-spec))
                       (f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -123,8 +130,8 @@
                 "user/username" "smithk"
                 "user/password" "insecure"}
           req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
-                                          (usermeta/mt-subtype-user usermt-subtype-prefix)
-                                          usermeta/v001
+                                          (meta/mt-subtype-user usermt-subtype-prefix)
+                                          meta/v001
                                           "UTF-8;q=1,ISO-8859-1;q=0"
                                           "json"
                                           "en-US"
@@ -133,8 +140,8 @@
                   (rtucore/header userhdr-establish-session "true")
                   (mock/body (json/write-str user))
                   (mock/content-type (rucore/content-type rumeta/mt-type
-                                                          (usermeta/mt-subtype-user usermt-subtype-prefix)
-                                                          usermeta/v001
+                                                          (meta/mt-subtype-user usermt-subtype-prefix)
+                                                          meta/v001
                                                           "json"
                                                           "UTF-8")))
           resp (app req)]
@@ -152,10 +159,10 @@
         ;; Update the user
         (let [user {"user/name" "Kate A. Smithward"}
               user-uri (str base-url
-                                entity-uri-prefix
-                                usermeta/pathcomp-users
-                                "/"
-                                resp-user-id-str)
+                            entity-uri-prefix
+                            meta/pathcomp-users
+                            "/"
+                            resp-user-id-str)
               req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                               (meta/mt-subtype-user usermt-subtype-prefix)
                                               meta/v001
@@ -178,7 +185,7 @@
           (testing "status code" (is (= 200 (:status resp))))
           (testing "body of updated user"
             (let [hdrs (:headers resp)
-              resp-body-stream (:body resp)]
+                  resp-body-stream (:body resp)]
               (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
               (is (not (nil? resp-body-stream)))
               (let [pct (rucore/parse-media-type (get hdrs "Content-Type"))
@@ -199,10 +206,10 @@
                     "user/username" "kates2"
                     "user/email" "kate@testing.com"}
               user-uri (str base-url
-                                entity-uri-prefix
-                                usermeta/pathcomp-users
-                                "/"
-                                resp-user-id-str)
+                            entity-uri-prefix
+                            meta/pathcomp-users
+                            "/"
+                            resp-user-id-str)
               req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                               (meta/mt-subtype-user usermt-subtype-prefix)
                                               meta/v001
@@ -225,7 +232,7 @@
           (testing "status code" (is (= 200 (:status resp))))
           (testing "body of updated user"
             (let [hdrs (:headers resp)
-              resp-body-stream (:body resp)]
+                  resp-body-stream (:body resp)]
               (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
               (is (not (nil? resp-body-stream)))
               (let [pct (rucore/parse-media-type (get hdrs "Content-Type"))
@@ -247,10 +254,10 @@
                     "user/username" "kates2"
                     "user/email" nil}
               user-uri (str base-url
-                                entity-uri-prefix
-                                usermeta/pathcomp-users
-                                "/"
-                                resp-user-id-str)
+                            entity-uri-prefix
+                            meta/pathcomp-users
+                            "/"
+                            resp-user-id-str)
               req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                               (meta/mt-subtype-user usermt-subtype-prefix)
                                               meta/v001
@@ -274,7 +281,7 @@
           (testing "status code" (is (= 200 (:status resp))))
           (testing "body of updated user"
             (let [hdrs (:headers resp)
-              resp-body-stream (:body resp)]
+                  resp-body-stream (:body resp)]
               (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
               (is (not (nil? resp-body-stream)))
               (let [pct (rucore/parse-media-type (get hdrs "Content-Type"))
@@ -295,10 +302,10 @@
                     "user/username" ""
                     "user/email" ""}
               user-uri (str base-url
-                                entity-uri-prefix
-                                usermeta/pathcomp-users
-                                "/"
-                                resp-user-id-str)
+                            entity-uri-prefix
+                            meta/pathcomp-users
+                            "/"
+                            resp-user-id-str)
               req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                               (meta/mt-subtype-user usermt-subtype-prefix)
                                               meta/v001
@@ -332,10 +339,10 @@
                     "user/username" "kates2"
                     "user/email" nil}
               user-uri (str base-url
-                                entity-uri-prefix
-                                usermeta/pathcomp-users
-                                "/"
-                                resp-user-id-str)
+                            entity-uri-prefix
+                            meta/pathcomp-users
+                            "/"
+                            resp-user-id-str)
               req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                               (meta/mt-subtype-user usermt-subtype-prefix)
                                               meta/v001
@@ -363,10 +370,10 @@
                     "user/username" "kates2"
                     "user/email" nil}
               user-uri (str base-url
-                                entity-uri-prefix
-                                usermeta/pathcomp-users
-                                "/"
-                                resp-user-id-str)
+                            entity-uri-prefix
+                            meta/pathcomp-users
+                            "/"
+                            resp-user-id-str)
               req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
                                               (meta/mt-subtype-user usermt-subtype-prefix)
                                               meta/v001
