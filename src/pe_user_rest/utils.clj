@@ -1,5 +1,6 @@
 (ns pe-user-rest.utils
   (:require [pe-rest-utils.core :as rucore]
+            [pe-user-rest.meta :as meta]
             [pe-user-core.core :as usercore]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -38,3 +39,15 @@
                                                                       auth-scheme-param-value)]
         (and (not (nil? found-user-ent))
              (= found-user-entid user-entid))))))
+
+(defn make-user-subentity-url
+  [base-url entity-uri-prefix user-id pathcomp-subent sub-id]
+  (rucore/make-abs-link-href base-url
+                             (str entity-uri-prefix
+                                  meta/pathcomp-users
+                                  "/"
+                                  user-id
+                                  "/"
+                                  pathcomp-subent
+                                  "/"
+                                  sub-id)))

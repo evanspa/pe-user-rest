@@ -20,15 +20,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod body-data-in-transform-fn meta/v001
   [version
-   db-spec
-   _
    post-as-do-login-input]
   (identity post-as-do-login-input))
 
 (defmethod body-data-out-transform-fn meta/v001
   [version
    db-spec
-   _
+   base-url
+   entity-uri-prefix
+   login-uri
    post-as-do-login-result]
   (-> post-as-do-login-result
       (ucore/transform-map-val :user/created-at #(c/to-long %))

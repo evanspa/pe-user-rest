@@ -23,7 +23,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod body-data-in-transform-fn meta/v001
   [version
-   db-spec
    user-id
    user]
   (identity user))
@@ -32,11 +31,16 @@
   [version
    db-spec
    user-id
+   base-url
+   entity-uri-prefix
+   entity-uri
    user]
   (-> user
       (dissoc :user/password)
       (dissoc :user/hashed-password)
       (ucore/transform-map-val :user/created-at #(c/to-long %))
+      (ucore/transform-map-val :user/deleted-at #(c/to-long %))
+      (ucore/transform-map-val :user/suspended-at #(c/to-long %))
       (ucore/transform-map-val :user/updated-at #(c/to-long %))
       (ucore/transform-map-val :user/verified-at #(c/to-long %))))
 

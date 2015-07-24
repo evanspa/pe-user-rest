@@ -27,20 +27,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod body-data-in-transform-fn meta/v001
   [version
-   db-spec
-   _   ;for 'users' resource, the 'in' would only ever be a NEW (to-be-created) user, so it by definition wouldn't have an entid
    user]
   (identity user))
 
 (defmethod body-data-out-transform-fn meta/v001
   [version
    db-spec
-   user-entid
-   user]
-  (-> user
+   base-url
+   entity-uri-prefix
+   entity-uri
+   new-user-id
+   new-user]
+  (-> new-user
       (dissoc :user/password)
       (dissoc :user/hashed-password)
       (ucore/transform-map-val :user/created-at #(c/to-long %))
+      (ucore/transform-map-val :user/deleted-at #(c/to-long %))
+      (ucore/transform-map-val :user/suspended-at #(c/to-long %))
       (ucore/transform-map-val :user/updated-at #(c/to-long %))
       (ucore/transform-map-val :user/verified-at #(c/to-long %))))
 

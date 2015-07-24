@@ -18,8 +18,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod body-data-in-transform-fn meta/v001
   [version
-   db-spec
-   _
+   user-id
    post-as-do-logout-input]
   (identity post-as-do-logout-input))
 
