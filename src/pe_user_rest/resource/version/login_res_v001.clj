@@ -16,6 +16,19 @@
                                                      do-light-login-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Helpers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn handle-login-exception
+  [e]
+  (let [cause (-> e ex-data :cause)]
+    (cond
+      (= cause :account-is-suspended) {:status 401
+                                       :login-failed-reason usercore/loginfailrsn-account-suspended}
+      (= cause :account-is-deleted) {:status 401
+                                     :login-failed-reason usercore/loginfailrsn-account-deleted}
+      :else {:status 401})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 body-data transformation functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod body-data-in-transform-fn meta/v001
@@ -52,23 +65,26 @@
          password :user/password} body-data]
     (if (and (not (nil? username-or-email))
              (not (nil? password)))
-      (let [[user-id user] (usercore/authenticate-user-by-password db-spec username-or-email password)]
-        (if (not (nil? user))
-          (let [new-token-id (usercore/next-auth-token-id db-spec)
-                user (-> (into {:last-modified (c/to-long (:user/updated-at user))} user)
-                         (ucore/trim-keys [:user/hashed-password])
-                         (merge-links-fn user-id)
-                         (merge-embedded-fn user-id))
-                plaintext-token (usercore/create-and-save-auth-token db-spec user-id new-token-id)]
-            {:status 200
-             :do-entity user
-             :location (rucore/make-abs-link-href base-url
-                                                  (format "%s%s/%s"
-                                                          entity-uri-prefix
-                                                          meta/pathcomp-users
-                                                          user-id))
-             :auth-token plaintext-token})
-          {:status 401}))
+      (try
+        (let [[user-id user] (usercore/authenticate-user-by-password db-spec username-or-email password)]
+          (if (not (nil? user))
+            (let [new-token-id (usercore/next-auth-token-id db-spec)
+                  user (-> (into {:last-modified (c/to-long (:user/updated-at user))} user)
+                           (ucore/trim-keys [:user/hashed-password])
+                           (merge-links-fn user-id)
+                           (merge-embedded-fn user-id))
+                  plaintext-token (usercore/create-and-save-auth-token db-spec user-id new-token-id)]
+              {:status 200
+               :do-entity user
+               :location (rucore/make-abs-link-href base-url
+                                                    (format "%s%s/%s"
+                                                            entity-uri-prefix
+                                                            meta/pathcomp-users
+                                                            user-id))
+               :auth-token plaintext-token})
+            {:status 401}))
+        (catch clojure.lang.ExceptionInfo e
+          (handle-login-exception e)))
       {:status 400})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,16 +104,19 @@
          password :user/password} body-data]
     (if (and (not (nil? username-or-email))
              (not (nil? password)))
-      (let [[user-id _] (usercore/authenticate-user-by-password db-spec username-or-email password)]
-        (if (not (nil? user-id))
-          (let [new-token-id (usercore/next-auth-token-id db-spec)
-                plaintext-token (usercore/create-and-save-auth-token db-spec user-id new-token-id)]
-            {:status 204
-             :location (rucore/make-abs-link-href base-url
-                                                  (format "%s%s/%s"
-                                                          entity-uri-prefix
-                                                          meta/pathcomp-users
-                                                          user-id))
-             :auth-token plaintext-token})
-          {:status 401}))
+      (try
+        (let [[user-id _] (usercore/authenticate-user-by-password db-spec username-or-email password)]
+          (if (not (nil? user-id))
+            (let [new-token-id (usercore/next-auth-token-id db-spec)
+                  plaintext-token (usercore/create-and-save-auth-token db-spec user-id new-token-id)]
+              {:status 204
+               :location (rucore/make-abs-link-href base-url
+                                                    (format "%s%s/%s"
+                                                            entity-uri-prefix
+                                                            meta/pathcomp-users
+                                                            user-id))
+               :auth-token plaintext-token})
+            {:status 401}))
+        (catch clojure.lang.ExceptionInfo e
+          (handle-login-exception e)))
       {:status 400})))

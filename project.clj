@@ -15,8 +15,8 @@
                  [org.slf4j/slf4j-api "1.7.5"]
                  [clj-time "0.8.0"]
                  [pe-core-utils "0.0.11"]
-                 [pe-user-core "0.1.24"]
-                 [pe-rest-utils "0.0.23"]]
+                 [pe-user-core "0.1.25"]
+                 [pe-rest-utils "0.0.24"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
           :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.28/"

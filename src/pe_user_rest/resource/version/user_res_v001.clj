@@ -9,7 +9,8 @@
             [pe-user-rest.resource.user-res :refer [save-user-validator-fn
                                                     body-data-in-transform-fn
                                                     body-data-out-transform-fn
-                                                    save-user-fn]]))
+                                                    save-user-fn
+                                                    delete-user-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 Validator function
@@ -55,3 +56,15 @@
    user
    if-unmodified-since]
   (usercore/save-user db-spec user-id plaintext-auth-token user if-unmodified-since))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 0.0.1 Delete user function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmethod delete-user-fn meta/v001
+  [version
+   db-spec
+   user-id
+   delete-reason
+   plaintext-auth-token ; in case you want to invalidate it
+   if-unmodified-since]
+  (usercore/mark-user-as-deleted db-spec user-id delete-reason if-unmodified-since))

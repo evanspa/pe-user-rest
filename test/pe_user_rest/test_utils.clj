@@ -30,6 +30,8 @@
 (def userhdr-auth-token "user-rest-auth-token")
 (def userhdr-error-mask "user-rest-error-mask")
 (def userhdr-if-unmodified-since "user-if-unmodified-since")
+(def userhdr-login-failed-reason "user-login-failed-reason")
+(def userhdr-delete-reason "user-delete-reason")
 (def base-url "")
 (def entity-uri-prefix "/testing/")
 (def userhdr-establish-session "user-establish-session")

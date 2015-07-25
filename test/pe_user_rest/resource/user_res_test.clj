@@ -13,6 +13,7 @@
             [pe-user-rest.resource.version.users-res-v001]
             [pe-user-rest.resource.user-res :as userres]
             [pe-user-rest.resource.version.user-res-v001]
+            [pe-user-rest.resource.login-res :as loginres]
             [pe-user-rest.meta :as meta]
             [pe-user-core.ddl :as uddl]
             [pe-jdbc-utils.core :as jcore]
@@ -30,12 +31,21 @@
                                              userhdr-error-mask
                                              userhdr-establish-session
                                              userhdr-if-unmodified-since
+                                             userhdr-login-failed-reason
+                                             userhdr-delete-reason
                                              entity-uri-prefix
                                              user-uri-template
                                              users-uri-template
+                                             login-uri-template
                                              db-spec-without-db
                                              db-spec
-                                             db-name]]))
+                                             db-name]]
+            [pe-user-rest.resource.user-test-utils :refer [user-id-and-token-for-credentials
+                                                           assert-success-login
+                                                           assert-success-light-login
+                                                           assert-unauthorized-login
+                                                           assert-unauthorized-light-login
+                                                           assert-malformed-login]]))
 
 (defn empty-embedded-resources-fn
   [version
@@ -81,7 +91,19 @@
                          (Long. user-id)
                          empty-embedded-resources-fn
                          empty-links-fn
-                         userhdr-if-unmodified-since)))
+                         userhdr-if-unmodified-since
+                         userhdr-delete-reason))
+  (ANY login-uri-template
+       []
+       (loginres/login-res db-spec
+                           usermt-subtype-prefix
+                           userhdr-auth-token
+                           userhdr-error-mask
+                           base-url
+                           entity-uri-prefix
+                           empty-embedded-resources-fn
+                           empty-links-fn
+                           userhdr-login-failed-reason)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Middleware-decorated app
@@ -334,36 +356,53 @@
               (let [error-mask (Long/parseLong error-mask-str)]
                 (is (pos? (bit-and error-mask userval/su-any-issues)))
                 (is (pos? (bit-and error-mask userval/su-username-and-email-not-provided)))))))
-        ;; Update the user with a bad user-if-modified-since header that is way off
-        (let [user {"user/name" "Kate A. Smithward II"
-                    "user/username" "kates2"
-                    "user/email" nil}
-              user-uri (str base-url
-                            entity-uri-prefix
-                            meta/pathcomp-users
-                            "/"
-                            resp-user-id-str)
-              req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
-                                              (meta/mt-subtype-user usermt-subtype-prefix)
-                                              meta/v001
-                                              "UTF-8;q=1,ISO-8859-1;q=0"
-                                              "json"
-                                              "en-US"
-                                              :put
-                                              user-uri)
-                      (mock/body (json/write-str user))
-                      (mock/content-type (rucore/content-type rumeta/mt-type
-                                                              (meta/mt-subtype-user usermt-subtype-prefix)
-                                                              meta/v001
-                                                              "json"
-                                                              "UTF-8"))
-                      (rtucore/header userhdr-if-unmodified-since (str (c/to-long (t/minus (t/now) (t/weeks 1)))))
-                      (rtucore/header "Authorization" (rtucore/authorization-req-hdr-val user-auth-scheme
-                                                                                         user-auth-scheme-param-name
-                                                                                         auth-token)))
-              resp (app req)
-              hdrs (:headers resp)]
-          (testing "status code" (is (= 409 (:status resp)))))
+        ;; Update the user with a bad user-if-modified-since header that is way
+        ;; off
+        (let [[_ loaded-user] (usercore/load-user-by-id db-spec (Long/parseLong resp-user-id-str))]
+          (let [user {"user/name" "Kate A. Smithward II"
+                      "user/username" "kates2"
+                      "user/email" nil}
+                user-uri (str base-url
+                              entity-uri-prefix
+                              meta/pathcomp-users
+                              "/"
+                              resp-user-id-str)
+                req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                                (meta/mt-subtype-user usermt-subtype-prefix)
+                                                meta/v001
+                                                "UTF-8;q=1,ISO-8859-1;q=0"
+                                                "json"
+                                                "en-US"
+                                                :put
+                                                user-uri)
+                        (mock/body (json/write-str user))
+                        (mock/content-type (rucore/content-type rumeta/mt-type
+                                                                (meta/mt-subtype-user usermt-subtype-prefix)
+                                                                meta/v001
+                                                                "json"
+                                                                "UTF-8"))
+                        (rtucore/header userhdr-if-unmodified-since (str (c/to-long (t/minus (t/now) (t/weeks 1)))))
+                        (rtucore/header "Authorization" (rtucore/authorization-req-hdr-val user-auth-scheme
+                                                                                           user-auth-scheme-param-name
+                                                                                           auth-token)))
+                resp (app req)
+                hdrs (:headers resp)]
+            (testing "status code"
+              (is (= 409 (:status resp)))
+              (let [hdrs (:headers resp)
+                    resp-body-stream (:body resp)]
+                (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
+                (is (not (nil? resp-body-stream)))
+                (let [pct (rucore/parse-media-type (get hdrs "Content-Type"))
+                      charset (get rumeta/char-sets (:charset pct))
+                      resp-user (rucore/read-res pct resp-body-stream charset)]
+                  (is (not (nil? resp-user)))
+                  (is (= (:user/name loaded-user) (get resp-user "user/name")))
+                  (is (= (:user/username loaded-user) (get resp-user "user/username")))
+                  (is (= (:user/email loaded-user) (get resp-user "user/email")))
+                  (is (= (:user/updated-count loaded-user) (get resp-user "user/updated-count")))
+                  (is (= (:user/created-at loaded-user) (c/from-long (get resp-user "user/created-at"))))
+                  (is (= (:user/updated-at loaded-user) (c/from-long (get resp-user "user/updated-at")))))))))
         ;; Update the user with a bad user-if-modified-since header that is barely off
         (let [[_ loaded-user] (usercore/load-user-by-username db-spec "kates2")
               user {"user/name" "Kate A. Smithward II"
@@ -396,3 +435,76 @@
               resp (app req)
               hdrs (:headers resp)]
           (testing "status code" (is (= 409 (:status resp)))))))))
+
+(deftest integration-tests-2
+  (testing "Successful creation of user and deleting the user."
+    (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
+    (is (nil? (usercore/load-user-by-username db-spec "smithk")))
+    (let [user {"user/name" "Karen Smith"
+                "user/email" "smithka@testing.com"
+                "user/username" "smithk"
+                "user/password" "insecure"}
+          req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                          (meta/mt-subtype-user usermt-subtype-prefix)
+                                          meta/v001
+                                          "UTF-8;q=1,ISO-8859-1;q=0"
+                                          "json"
+                                          "en-US"
+                                          :post
+                                          users-uri-template)
+                  (rtucore/header userhdr-establish-session "true")
+                  (mock/body (json/write-str user))
+                  (mock/content-type (rucore/content-type rumeta/mt-type
+                                                          (meta/mt-subtype-user usermt-subtype-prefix)
+                                                          meta/v001
+                                                          "json"
+                                                          "UTF-8")))
+          resp (app req)]
+      (let [hdrs (:headers resp)
+            resp-body-stream (:body resp)
+            user-location-str (get hdrs "location")
+            resp-user-id-str (rtucore/last-url-part user-location-str)
+            pct (rucore/parse-media-type (get hdrs "Content-Type"))
+            charset (get rumeta/char-sets (:charset pct))
+            resp-user (rucore/read-res pct resp-body-stream charset)
+            auth-token (get hdrs userhdr-auth-token)
+            [loaded-user-id loaded-user] (usercore/load-user-by-authtoken db-spec (Long. resp-user-id-str) auth-token)]
+        ;; sanity check that login works
+        (assert-success-login app
+                              {"user/username-or-email" "smithk"
+                               "user/password" "insecure"}
+                              {}
+                              {})
+        ;; delete the user
+        (let [user-uri (str base-url
+                            entity-uri-prefix
+                            meta/pathcomp-users
+                            "/"
+                            resp-user-id-str)
+              req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                              (meta/mt-subtype-user usermt-subtype-prefix)
+                                              meta/v001
+                                              "UTF-8;q=1,ISO-8859-1;q=0"
+                                              "json"
+                                              "en-US"
+                                              :delete
+                                              user-uri)
+                      (rtucore/header userhdr-if-unmodified-since (str (c/to-long (t/minus (:user/updated-at loaded-user) (t/seconds 0)))))
+                      (rtucore/header "Authorization" (rtucore/authorization-req-hdr-val user-auth-scheme
+                                                                                         user-auth-scheme-param-name
+                                                                                         auth-token)))
+              resp (app req)
+              hdrs (:headers resp)]
+          (testing "status code" (is (= 204 (:status resp)))))
+        ;; Attempt to load the user
+        (is (nil? (usercore/load-user-by-authtoken db-spec (Long. resp-user-id-str) auth-token)))
+        ;; is still nil because the auth token has been invalidated
+        (is (nil? (usercore/load-user-by-authtoken db-spec (Long. resp-user-id-str) auth-token false)))
+        (is (nil? (usercore/load-user-by-id db-spec (Long. resp-user-id-str))))
+        (is (not (nil? (usercore/load-user-by-id db-spec (Long. resp-user-id-str) false))))
+        ;; Attempt to login
+        (assert-unauthorized-login app
+                                   {"user/username-or-email" "smithk"
+                                    "user/password" "insecure"}
+                                   usercore/loginfailrsn-account-deleted
+                                   userhdr-login-failed-reason)))))

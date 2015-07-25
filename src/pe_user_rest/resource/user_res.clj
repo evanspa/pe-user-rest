@@ -13,6 +13,7 @@
 (declare body-data-in-transform-fn)
 (declare body-data-out-transform-fn)
 (declare save-user-fn)
+(declare delete-user-fn)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Handler
@@ -50,6 +51,32 @@
                               nil
                               if-unmodified-since-hdr))
 
+(defn handle-user-delete!
+  [ctx
+   db-spec
+   base-url
+   entity-uri-prefix
+   envlog-uri
+   user-id
+   plaintext-auth-token
+   embedded-resources-fn
+   links-fn
+   if-unmodified-since-hdr
+   delete-reason-hdr]
+  (rucore/delete-invoker ctx
+                         db-spec
+                         base-url
+                         entity-uri-prefix
+                         envlog-uri
+                         embedded-resources-fn
+                         links-fn
+                         [user-id]
+                         plaintext-auth-token
+                         body-data-out-transform-fn
+                         delete-user-fn
+                         delete-reason-hdr
+                         if-unmodified-since-hdr))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Validator function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -67,6 +94,11 @@
 (defmulti-by-version save-user-fn meta/v001)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Delete user function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmulti-by-version delete-user-fn meta/v001)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Resource definition
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defresource user-res
@@ -81,11 +113,12 @@
    user-id
    embedded-resources-fn
    links-fn
-   if-unmodified-since-hdr]
+   if-unmodified-since-hdr
+   delete-reason-hdr]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
-  :allowed-methods [:put]
+  :allowed-methods [:put :delete]
   :authorized? (fn [ctx] (userresutils/authorized? ctx
                                                    db-spec
                                                    user-id
@@ -109,6 +142,19 @@
                                     embedded-resources-fn
                                     links-fn
                                     if-unmodified-since-hdr))
+  :delete! (fn [ctx] (handle-user-delete! ctx
+                                          db-spec
+                                          base-url
+                                          entity-uri-prefix
+                                          (:uri (:request ctx))
+                                          user-id
+                                          (userresutils/get-plaintext-auth-token ctx
+                                                                                 auth-scheme
+                                                                                 auth-scheme-param-name)
+                                          embedded-resources-fn
+                                          links-fn
+                                          if-unmodified-since-hdr
+                                          delete-reason-hdr))
   :handle-ok (fn [ctx] (rucore/handle-resp ctx
                                            hdr-auth-token
                                            hdr-error-mask)))

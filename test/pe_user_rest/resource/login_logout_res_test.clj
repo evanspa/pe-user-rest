@@ -27,13 +27,20 @@
                                              userhdr-auth-token
                                              userhdr-error-mask
                                              userhdr-establish-session
+                                             userhdr-login-failed-reason
                                              entity-uri-prefix
                                              login-uri-template
                                              light-login-uri-template
                                              logout-uri-template
                                              db-spec-without-db
                                              db-spec
-                                             db-name]]))
+                                             db-name]]
+            [pe-user-rest.resource.user-test-utils :refer [user-id-and-token-for-credentials
+                                                           assert-success-login
+                                                           assert-success-light-login
+                                                           assert-unauthorized-login
+                                                           assert-unauthorized-light-login
+                                                           assert-malformed-login]]))
 (defn empty-embedded-resources-fn
   [version
    base-url
@@ -62,7 +69,8 @@
                            base-url
                            entity-uri-prefix
                            empty-embedded-resources-fn
-                           empty-links-fn))
+                           empty-links-fn
+                           userhdr-login-failed-reason))
   (ANY light-login-uri-template
        []
        (loginres/light-login-res db-spec
@@ -70,7 +78,8 @@
                                  userhdr-auth-token
                                  userhdr-error-mask
                                  base-url
-                                 entity-uri-prefix))
+                                 entity-uri-prefix
+                                 userhdr-login-failed-reason))
   (ANY logout-uri-template
        [user-id]
        (logoutres/logout-res db-spec
@@ -114,7 +123,8 @@
                                                         base-url
                                                         (format "%s%s"
                                                                 entity-uri-prefix
-                                                                "pears/142")))))))
+                                                                "pears/142")))))
+                           userhdr-login-failed-reason))
   (ANY light-login-uri-template
        []
        (loginres/light-login-res db-spec
@@ -174,154 +184,6 @@
                       (jcore/with-try-catch-exec-as-query db-spec
                         (uddl/v1-create-user-account-suspended-count-trigger-fn db-spec))
                       (f)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Helpers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn- user-id-and-token-for-credentials
-  [app credentials]
-  (let [req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
-                                        (meta/mt-subtype-user usermt-subtype-prefix)
-                                        meta/v001
-                                        "UTF-8;q=1,ISO-8859-1;q=0"
-                                        "json"
-                                        "en-US"
-                                        :post
-                                        login-uri-template)
-                (mock/body (json/write-str credentials))
-                (mock/content-type (rucore/content-type rumeta/mt-type
-                                                        (meta/mt-subtype-user usermt-subtype-prefix)
-                                                        meta/v001
-                                                        "json"
-                                                        "UTF-8")))
-        resp (app req)]
-    (let [hdrs (:headers resp)
-          resp-body-stream (:body resp)
-          user-location-str (get hdrs "location")
-          resp-user-id-str (rtucore/last-url-part user-location-str)
-          auth-token (get hdrs userhdr-auth-token)]
-      [resp-user-id-str auth-token])))
-
-(defn- assert-success-login
-  [app credentials expected-embedded expected-links]
-  (let [req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
-                                        (meta/mt-subtype-user usermt-subtype-prefix)
-                                        meta/v001
-                                        "UTF-8;q=1,ISO-8859-1;q=0"
-                                        "json"
-                                        "en-US"
-                                        :post
-                                        login-uri-template)
-                (mock/body (json/write-str credentials))
-                (mock/content-type (rucore/content-type rumeta/mt-type
-                                                        (meta/mt-subtype-user usermt-subtype-prefix)
-                                                        meta/v001
-                                                        "json"
-                                                        "UTF-8")))
-        resp (app req)]
-    (testing "status code" (is (= 200 (:status resp))))
-    (testing "cookies" (is (= (empty? (:cookies resp)))))
-    (testing "headers and body of created user"
-      (let [hdrs (:headers resp)
-            resp-body-stream (:body resp)
-            user-location-str (get hdrs "location")]
-        (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
-        (is (not (nil? resp-body-stream)))
-        (let [resp-user-id-str (rtucore/last-url-part user-location-str)
-              pct (rucore/parse-media-type (get hdrs "Content-Type"))
-              charset (get rumeta/char-sets (:charset pct))
-              resp-user (rucore/read-res pct resp-body-stream charset)
-              embedded (get resp-user "_embedded")
-              links (get resp-user "_links")
-              auth-token (get hdrs userhdr-auth-token)]
-          (is (= expected-embedded embedded))
-          (is (= expected-links links))
-          (is (not (nil? auth-token)))
-          (is (not (nil? resp-user-id-str)))
-          (is (not (nil? resp-user)))
-          (is (not (nil? (get resp-user "user/created-at"))))
-          (is (= "Karen Smith" (get resp-user "user/name")))
-          (is (= "smithka@testing.com" (get resp-user "user/email")))
-          (is (= "smithk" (get resp-user "user/username")))
-          (is (nil? (get resp-user "user/password")))
-          (let [[loaded-user-id loaded-user] (usercore/load-user-by-authtoken db-spec
-                                                                              (Long/parseLong resp-user-id-str)
-                                                                              auth-token)]
-            (is (not (nil? loaded-user-id)))
-            (is (= (Long/parseLong resp-user-id-str) loaded-user-id))))))))
-
-(defn- assert-success-light-login
-  [app credentials]
-  (let [req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
-                                        (meta/mt-subtype-user usermt-subtype-prefix)
-                                        meta/v001
-                                        "UTF-8;q=1,ISO-8859-1;q=0"
-                                        "json"
-                                        "en-US"
-                                        :post
-                                        light-login-uri-template)
-                (mock/body (json/write-str credentials))
-                (mock/content-type (rucore/content-type rumeta/mt-type
-                                                        (meta/mt-subtype-user usermt-subtype-prefix)
-                                                        meta/v001
-                                                        "json"
-                                                        "UTF-8")))
-        resp (app req)]
-    (testing "status code" (is (= 204 (:status resp))))
-    (testing "cookies" (is (= (empty? (:cookies resp)))))
-    (testing "headers"
-      (let [hdrs (:headers resp)
-            resp-body-stream (:body resp)]
-        (is (= "Accept, Accept-Charset, Accept-Language" (get hdrs "Vary")))
-        (is (empty? resp-body-stream))
-        (let [auth-token (get hdrs userhdr-auth-token)]
-          (is (not (nil? auth-token))))))))
-
-(defn- assert-unauthorized-login
-  ([app credentials]
-   (assert-unauthorized-login app credentials login-uri-template))
-  ([app credentials login-uri]
-   (let [req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
-                                         (meta/mt-subtype-user usermt-subtype-prefix)
-                                         meta/v001
-                                         "UTF-8;q=1,ISO-8859-1;q=0"
-                                         "json"
-                                         "en-US"
-                                         :post
-                                         login-uri-template)
-                 (mock/body (json/write-str credentials))
-                 (mock/content-type (rucore/content-type rumeta/mt-type
-                                                         (meta/mt-subtype-user usermt-subtype-prefix)
-                                                         meta/v001
-                                                         "json"
-                                                         "UTF-8")))
-         resp (app req)]
-     (testing "status code" (is (= 401 (:status resp))))
-     (testing "cookies" (is (= (empty? (:cookies resp))))))))
-
-(defn- assert-unauthorized-light-login
-  [app credentials]
-  (assert-unauthorized-login app credentials light-login-uri-template))
-
-(defn- assert-malformed-login
-  [app credentials]
-  (let [req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
-                                        (meta/mt-subtype-user usermt-subtype-prefix)
-                                        meta/v001
-                                        "UTF-8;q=1,ISO-8859-1;q=0"
-                                        "json"
-                                        "en-US"
-                                        :post
-                                        login-uri-template)
-                (mock/body (json/write-str credentials))
-                (mock/content-type (rucore/content-type rumeta/mt-type
-                                                        (meta/mt-subtype-user usermt-subtype-prefix)
-                                                        meta/v001
-                                                        "json"
-                                                        "UTF-8")))
-        resp (app req)]
-    (testing "status code" (is (= 400 (:status resp))))
-    (testing "cookies" (is (= (empty? (:cookies resp)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The Tests
@@ -458,10 +320,14 @@
   (testing "Unsuccessful user login with app txn logs."
     (assert-unauthorized-login app-with-empty-embedded-and-links
                                {"user/username-or-email" "smithk"
-                                "user/password" "in5ecure"})
+                                "user/password" "in5ecure"}
+                               nil
+                               userhdr-login-failed-reason)
     (assert-unauthorized-light-login app-with-empty-embedded-and-links
                                      {"user/username-or-email" "smithk"
-                                      "user/password" "in5ecure"})))
+                                      "user/password" "in5ecure"}
+                                     nil
+                                     userhdr-login-failed-reason)))
 
 (deftest unsuccessful-login-no-users-in-db
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
@@ -469,10 +335,14 @@
   (testing "Unsuccessful user login with app txn logs."
     (assert-unauthorized-login app-with-empty-embedded-and-links
                                {"user/username-or-email" "smithk"
-                                "user/password" "insecure"})
+                                "user/password" "insecure"}
+                               nil
+                               userhdr-login-failed-reason)
     (assert-unauthorized-light-login app-with-empty-embedded-and-links
                                      {"user/username-or-email" "smithk"
-                                      "user/password" "insecure"})))
+                                      "user/password" "insecure"}
+                                     nil
+                                     userhdr-login-failed-reason)))
 
 (deftest unsuccessful-login-wrong-username
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))
@@ -489,10 +359,14 @@
   (testing "Unsuccessful user login with app txn logs."
     (assert-unauthorized-login app-with-empty-embedded-and-links
                                {"user/username-or-email" "smithka"
-                                "user/password" "insecure"})
+                                "user/password" "insecure"}
+                               nil
+                               userhdr-login-failed-reason)
     (assert-unauthorized-light-login app-with-empty-embedded-and-links
                                      {"user/username-or-email" "smithka"
-                                      "user/password" "insecure"})))
+                                      "user/password" "insecure"}
+                                     nil
+                                     userhdr-login-failed-reason)))
 
 (deftest unsuccessful-login-malformed-0
   (is (nil? (usercore/load-user-by-email db-spec "smithka@testing.com")))

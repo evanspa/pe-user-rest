@@ -80,7 +80,8 @@
    base-url
    entity-uri-prefix
    embedded-resources-fn
-   links-fn]
+   links-fn
+   login-failed-reason-hdr]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -96,7 +97,8 @@
                                        do-login-fn))
   :handle-created (fn [ctx] (rucore/handle-resp ctx
                                                 hdr-auth-token
-                                                hdr-error-mask)))
+                                                hdr-error-mask
+                                                login-failed-reason-hdr)))
 
 (defresource light-login-res
   [db-spec
@@ -104,7 +106,8 @@
    hdr-auth-token
    hdr-error-mask
    base-url
-   entity-uri-prefix]
+   entity-uri-prefix
+   login-failed-reason-hdr]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -120,4 +123,5 @@
                                        do-light-login-fn))
   :handle-created (fn [ctx] (rucore/handle-resp ctx
                                                 hdr-auth-token
-                                                hdr-error-mask)))
+                                                hdr-error-mask
+                                                login-failed-reason-hdr)))
