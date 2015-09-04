@@ -1,6 +1,9 @@
 (ns pe-user-rest.utils
   (:require [pe-rest-utils.core :as rucore]
             [pe-user-rest.meta :as meta]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]
+            [pe-core-utils.core :as ucore]
             [pe-user-core.core :as usercore]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,3 +54,14 @@
                                   pathcomp-subent
                                   "/"
                                   sub-id)))
+
+(defn user-out-transform
+  [user]
+  (-> user
+      (dissoc :user/password)
+      (dissoc :user/hashed-password)
+      (ucore/transform-map-val :user/created-at #(c/to-long %))
+      (ucore/transform-map-val :user/deleted-at #(c/to-long %))
+      (ucore/transform-map-val :user/suspended-at #(c/to-long %))
+      (ucore/transform-map-val :user/updated-at #(c/to-long %))
+      (ucore/transform-map-val :user/verified-at #(c/to-long %))))

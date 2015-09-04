@@ -8,6 +8,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [pe-user-core.validation :as userval]
+            [pe-user-rest.utils :as userresutils]
             [pe-user-rest.resource.users-res :refer [new-user-validator-fn
                                                      body-data-in-transform-fn
                                                      body-data-out-transform-fn
@@ -38,14 +39,7 @@
    entity-uri
    new-user-id
    new-user]
-  (-> new-user
-      (dissoc :user/password)
-      (dissoc :user/hashed-password)
-      (ucore/transform-map-val :user/created-at #(c/to-long %))
-      (ucore/transform-map-val :user/deleted-at #(c/to-long %))
-      (ucore/transform-map-val :user/suspended-at #(c/to-long %))
-      (ucore/transform-map-val :user/updated-at #(c/to-long %))
-      (ucore/transform-map-val :user/verified-at #(c/to-long %))))
+  (userresutils/user-out-transform new-user))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 Next user account id function

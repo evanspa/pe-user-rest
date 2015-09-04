@@ -6,11 +6,13 @@
             [pe-core-utils.core :as ucore]
             [pe-user-core.core :as usercore]
             [pe-user-core.validation :as userval]
+            [pe-user-rest.utils :as userresutils]
             [pe-user-rest.resource.user-res :refer [save-user-validator-fn
                                                     body-data-in-transform-fn
                                                     body-data-out-transform-fn
                                                     save-user-fn
-                                                    delete-user-fn]]))
+                                                    delete-user-fn
+                                                    load-user-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 Validator function
@@ -36,14 +38,7 @@
    entity-uri-prefix
    entity-uri
    user]
-  (-> user
-      (dissoc :user/password)
-      (dissoc :user/hashed-password)
-      (ucore/transform-map-val :user/created-at #(c/to-long %))
-      (ucore/transform-map-val :user/deleted-at #(c/to-long %))
-      (ucore/transform-map-val :user/suspended-at #(c/to-long %))
-      (ucore/transform-map-val :user/updated-at #(c/to-long %))
-      (ucore/transform-map-val :user/verified-at #(c/to-long %))))
+  (userresutils/user-out-transform user))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 Save user function
@@ -68,3 +63,14 @@
    plaintext-auth-token ; in case you want to invalidate it
    if-unmodified-since]
   (usercore/mark-user-as-deleted db-spec user-id delete-reason if-unmodified-since))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 0.0.1 Load user function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmethod load-user-fn meta/v001
+  [version
+   db-spec
+   user-id
+   plaintext-auth-token
+   if-modified-since]
+  (usercore/load-user-by-id db-spec user-id true))

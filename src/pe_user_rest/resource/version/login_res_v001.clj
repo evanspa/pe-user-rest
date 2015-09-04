@@ -10,6 +10,7 @@
             [pe-user-core.core :as usercore]
             [pe-user-core.validation :as userval]
             [pe-user-rest.meta :as meta]
+            [pe-user-rest.utils :as userresutils]
             [pe-user-rest.resource.login-res :refer [body-data-in-transform-fn
                                                      body-data-out-transform-fn
                                                      do-login-fn
@@ -43,10 +44,7 @@
    entity-uri-prefix
    login-uri
    post-as-do-login-result]
-  (-> post-as-do-login-result
-      (ucore/transform-map-val :user/created-at #(c/to-long %))
-      (ucore/transform-map-val :user/updated-at #(c/to-long %))
-      (ucore/transform-map-val :user/verified-at #(c/to-long %))))
+  (userresutils/user-out-transform post-as-do-login-result))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 0.0.1 do login function

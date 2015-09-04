@@ -31,6 +31,7 @@
                                              userhdr-error-mask
                                              userhdr-establish-session
                                              userhdr-if-unmodified-since
+                                             userhdr-if-modified-since
                                              userhdr-login-failed-reason
                                              userhdr-delete-reason
                                              entity-uri-prefix
@@ -92,6 +93,7 @@
                          empty-embedded-resources-fn
                          empty-links-fn
                          userhdr-if-unmodified-since
+                         userhdr-if-modified-since
                          userhdr-delete-reason))
   (ANY login-uri-template
        []

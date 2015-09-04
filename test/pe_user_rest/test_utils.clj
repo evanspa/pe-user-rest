@@ -30,6 +30,7 @@
 (def userhdr-auth-token "user-rest-auth-token")
 (def userhdr-error-mask "user-rest-error-mask")
 (def userhdr-if-unmodified-since "user-if-unmodified-since")
+(def userhdr-if-modified-since "user-if-modified-since")
 (def userhdr-login-failed-reason "user-login-failed-reason")
 (def userhdr-delete-reason "user-delete-reason")
 (def base-url "")

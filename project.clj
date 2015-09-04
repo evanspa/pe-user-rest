@@ -15,11 +15,11 @@
                  [org.slf4j/slf4j-api "1.7.5"]
                  [clj-time "0.8.0"]
                  [pe-core-utils "0.0.11"]
-                 [pe-user-core "0.1.26"]
-                 [pe-rest-utils "0.0.27"]]
+                 [pe-user-core "0.1.27"]
+                 [pe-rest-utils "0.0.28"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
-          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.35/"
+          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.36/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:source-paths ["dev"]  ;ensures 'user.clj' gets auto-loaded
                    :plugins [[cider/cider-nrepl "0.10.0-SNAPSHOT"]
@@ -30,7 +30,7 @@
                                   [org.clojure/data.json "0.2.5"]
                                   [org.clojure/tools.nrepl "0.2.7"]
                                   [org.postgresql/postgresql "9.4-1201-jdbc41"]
-                                  [pe-rest-testutils "0.0.5"]
+                                  [pe-rest-testutils "0.0.6"]
                                   [ring-server "0.3.1"]
                                   [ring-mock "0.1.5"]]}
              :test {:resource-paths ["test-resources"]}}
