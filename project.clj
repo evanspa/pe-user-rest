@@ -1,4 +1,4 @@
-(defproject pe-user-rest "0.0.36"
+(defproject pe-user-rest "0.0.37-SNAPSHOT"
   :description "A Clojure library encapsulating an abstraction modeling a user within a REST API."
   :url "https://github.com/evanspa/pe-user-rest"
   :license {:name "MIT"
