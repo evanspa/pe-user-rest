@@ -32,6 +32,7 @@
                                              login-uri-template
                                              light-login-uri-template
                                              logout-uri-template
+                                             fixture-maker
                                              db-spec-without-db
                                              db-spec
                                              db-name]]
@@ -161,29 +162,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fixtures
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-fixtures :each (fn [f]
-                      (jcore/drop-database db-spec-without-db db-name)
-                      (jcore/create-database db-spec-without-db db-name)
-                      (j/db-do-commands db-spec
-                                        true
-                                        uddl/schema-version-ddl
-                                        uddl/v0-create-user-account-ddl
-                                        uddl/v0-add-unique-constraint-user-account-email
-                                        uddl/v0-add-unique-constraint-user-account-username
-                                        uddl/v0-create-authentication-token-ddl
-                                        uddl/v1-user-add-deleted-reason-col
-                                        uddl/v1-user-add-suspended-at-col
-                                        uddl/v1-user-add-suspended-reason-col
-                                        uddl/v1-user-add-suspended-count-col)
-                      (jcore/with-try-catch-exec-as-query db-spec
-                        (uddl/v0-create-updated-count-inc-trigger-fn db-spec))
-                      (jcore/with-try-catch-exec-as-query db-spec
-                        (uddl/v0-create-user-account-updated-count-trigger-fn db-spec))
-                      (jcore/with-try-catch-exec-as-query db-spec
-                        (uddl/v1-create-suspended-count-inc-trigger-fn db-spec))
-                      (jcore/with-try-catch-exec-as-query db-spec
-                        (uddl/v1-create-user-account-suspended-count-trigger-fn db-spec))
-                      (f)))
+(use-fixtures :each (fixture-maker))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The Tests

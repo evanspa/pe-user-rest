@@ -20,6 +20,7 @@
 (declare body-data-in-transform-fn)
 (declare body-data-out-transform-fn)
 (declare save-new-user-fn)
+(declare send-email-verification-fn)
 (declare make-session-fn)
 (declare next-user-account-id-fn)
 
@@ -34,7 +35,12 @@
    entity-uri
    hdr-establish-session
    embedded-resources-fn
-   links-fn]
+   links-fn
+   verification-email-mustache-template
+   verification-email-subject-line
+   verification-email-from
+   verification-url-maker-fn
+   flagged-url-maker-fn]
   (rucore/put-or-post-invoker ctx
                               :post-as-create
                               db-spec
@@ -50,7 +56,26 @@
                               body-data-in-transform-fn
                               body-data-out-transform-fn
                               next-user-account-id-fn
-                              save-new-user-fn
+                              (fn [version
+                                   db-spec
+                                   plaintext-authtoken ; not used
+                                   new-user-id
+                                   user]
+                                (let [save-result (save-new-user-fn version
+                                                                    db-spec
+                                                                    plaintext-authtoken ; not used
+                                                                    new-user-id
+                                                                    user)]
+                                  (when save-result
+                                    (send-email-verification-fn version
+                                                                db-spec
+                                                                new-user-id
+                                                                verification-email-mustache-template
+                                                                verification-email-subject-line
+                                                                verification-email-from
+                                                                verification-url-maker-fn
+                                                                flagged-url-maker-fn))
+                                  save-result))
                               nil
                               hdr-establish-session
                               make-session-fn
@@ -79,6 +104,11 @@
 (defmulti-by-version save-new-user-fn meta/v001)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Send verification email function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmulti-by-version send-email-verification-fn meta/v001)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Make session function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmulti-by-version make-session-fn meta/v001)
@@ -92,7 +122,12 @@
    entity-uri-prefix
    hdr-establish-session
    embedded-resources-fn
-   links-fn]
+   links-fn
+   verification-email-mustache-template
+   verification-email-subject-line
+   verification-email-from
+   verification-url-maker-fn
+   flagged-url-maker-fn]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -105,7 +140,12 @@
                                        (:uri (:request ctx))
                                        hdr-establish-session
                                        embedded-resources-fn
-                                       links-fn))
+                                       links-fn
+                                       verification-email-mustache-template
+                                       verification-email-subject-line
+                                       verification-email-from
+                                       verification-url-maker-fn
+                                       flagged-url-maker-fn))
   :handle-created (fn [ctx] (rucore/handle-resp ctx
                                                 hdr-auth-token
                                                 hdr-error-mask)))

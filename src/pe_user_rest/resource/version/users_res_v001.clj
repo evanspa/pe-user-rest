@@ -14,6 +14,7 @@
                                                      body-data-out-transform-fn
                                                      next-user-account-id-fn
                                                      save-new-user-fn
+                                                     send-email-verification-fn
                                                      make-session-fn]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -58,6 +59,26 @@
    new-user-id
    user]
   (usercore/save-new-user db-spec new-user-id user))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 0.0.1 Send email verification function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defmethod send-email-verification-fn meta/v001
+  [version
+   db-spec
+   user-id
+   verification-email-mustache-template
+   verification-email-subject-line
+   verification-email-from
+   verification-url-maker-fn
+   flagged-url-maker-fn]
+  (usercore/send-verification-notice db-spec
+                                     user-id
+                                     verification-email-mustache-template
+                                     verification-email-subject-line
+                                     verification-email-from
+                                     verification-url-maker-fn
+                                     flagged-url-maker-fn))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Make session function

@@ -32,7 +32,7 @@ pe-user-rest is available from Clojars.  Add the following dependency to your
 `project.clj` file:
 
 ```
-[pe-user-rest "0.0.37"]
+[pe-user-rest "0.0.38"]
 ```
 
 ## pe-* Clojure Library Suite

@@ -25,6 +25,8 @@
 (def pathcomp-login "login")
 (def pathcomp-light-login "light-login")
 (def pathcomp-logout "logout")
+(def pathcomp-verification "verification")
+(def pathcomp-flagged "flagged")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Information about this REST API, including supported content
