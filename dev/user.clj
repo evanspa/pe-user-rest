@@ -8,4 +8,5 @@
             [clj-time.coerce :as c]
             [clojure.test :as test]
             [clojure.java.io :refer [resource]]
+            [pe-user-core.core :as usercore]
             [clojure.tools.namespace.repl :refer (refresh refresh-all)]))

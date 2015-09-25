@@ -45,6 +45,8 @@
                                              verification-email-subject-line
                                              verification-email-from
                                              verification-url-maker
+                                             veri-verified-mustache-template
+                                             veri-error-mustache-template
                                              flagged-url-maker
                                              db-spec-without-db
                                              db-spec
@@ -115,7 +117,9 @@
                                                  base-url
                                                  entity-uri-prefix
                                                  (Long. user-id)
-                                                 verification-token))
+                                                 verification-token
+                                                 veri-verified-mustache-template
+                                                 veri-error-mustache-template))
   (ANY login-uri-template
        []
        (loginres/login-res db-spec

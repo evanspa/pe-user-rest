@@ -84,6 +84,9 @@
   [user-id verification-token]
   (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-flagged "/" verification-token))
 
+(def veri-verified-mustache-template "web/templates/testing.account-verified.html.mustache")
+(def veri-error-mustache-template "web/templates/testing.verification-error.html.mustache")
+
 (delivery-mode! :test)
 
 (def users-uri-template
