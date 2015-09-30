@@ -17,6 +17,7 @@
 ;; Link relations
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def logout-relation :logout)
+(def send-verification-email-relation :send-verification-email)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; URL path components
@@ -27,6 +28,7 @@
 (def pathcomp-logout "logout")
 (def pathcomp-verification "verification")
 (def pathcomp-flagged "flagged")
+(def pathcomp-send-verification-email "send-verification-email")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Information about this REST API, including supported content
