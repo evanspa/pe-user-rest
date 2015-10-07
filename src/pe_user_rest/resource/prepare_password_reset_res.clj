@@ -23,6 +23,7 @@
    email
    password-reset-token
    password-reset-form-mustache-template
+   password-reset-form-action
    password-reset-error-mustache-template]
   (letfn [(resp [body-str]
             (ring-response {:headers {"content-type" "text/html"}
@@ -33,7 +34,8 @@
         (if (not (nil? user))
           (resp (render-resource password-reset-form-mustache-template
                                  (merge user
-                                        {pwdresetutil/param-new-password pwdresetutil/param-new-password})))
+                                        {:password-reset-form-action password-reset-form-action
+                                         pwdresetutil/param-new-password pwdresetutil/param-new-password})))
           (resp (render-resource password-reset-error-mustache-template {}))))
       (catch Exception e
         (resp (render-resource password-reset-error-mustache-template {}))))))
@@ -48,6 +50,7 @@
    email
    password-reset-token
    password-reset-form-mustache-template
+   password-reset-form-action
    password-reset-error-mustache-template]
   :available-media-types ["text/html"]
   :allowed-methods [:get]
@@ -60,4 +63,5 @@
                                               email
                                               password-reset-token
                                               password-reset-form-mustache-template
+                                              password-reset-form-action
                                               password-reset-error-mustache-template)))
