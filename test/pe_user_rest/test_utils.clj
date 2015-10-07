@@ -85,12 +85,26 @@
 (def welcome-and-verification-email-from "welcome@example.com")
 
 (defn verification-url-maker
-  [user-id verification-token]
-  (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-verification "/" verification-token))
+  [email verification-token]
+  (url-encode (str base-url
+                   entity-uri-prefix
+                   meta/pathcomp-users
+                   email
+                   "/"
+                   meta/pathcomp-verification
+                   "/"
+                   verification-token)))
 
 (defn verification-flagged-url-maker
-  [user-id verification-token]
-  (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-verification-flagged "/" verification-token))
+  [email verification-token]
+  (url-encode (str base-url
+                   entity-uri-prefix
+                   meta/pathcomp-users
+                   email
+                   "/"
+                   meta/pathcomp-verification-flagged
+                   "/"
+                   verification-token)))
 
 (def verification-success-mustache-template "web/templates/verification-success.html.mustache")
 (def verification-error-mustache-template "web/templates/verification-error.html.mustache")
