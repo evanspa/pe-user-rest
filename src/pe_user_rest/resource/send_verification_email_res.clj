@@ -33,7 +33,7 @@
    verification-email-subject-line
    verification-email-from
    verification-url-maker-fn
-   flagged-url-maker-fn]
+   verification-flagged-url-maker-fn]
   (rucore/put-or-post-invoker ctx
                               :post-as-do
                               db-spec
@@ -58,7 +58,7 @@
                                    user-id
                                    base-url
                                    entity-uri-prefix
-                                   logout-uri
+                                   send-verification-email-uri
                                    plaintext-auth-token
                                    send-verification-email-post-as-do-body
                                    merge-embedded-fn
@@ -70,7 +70,7 @@
                                                                verification-email-subject-line
                                                                verification-email-from
                                                                verification-url-maker-fn
-                                                               flagged-url-maker-fn))
+                                                               verification-flagged-url-maker-fn))
                               nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -100,7 +100,7 @@
    verification-email-subject-line
    verification-email-from
    verification-url-maker-fn
-   flagged-url-maker-fn]
+   verification-flagged-url-maker-fn]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -125,7 +125,7 @@
                                                    verification-email-subject-line
                                                    verification-email-from
                                                    verification-url-maker-fn
-                                                   flagged-url-maker-fn))
+                                                   verification-flagged-url-maker-fn))
   :handle-created (fn [ctx] (rucore/handle-resp ctx
                                                 hdr-auth-token
                                                 hdr-error-mask)))

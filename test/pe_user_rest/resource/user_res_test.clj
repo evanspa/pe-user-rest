@@ -43,7 +43,7 @@
                                              verification-email-subject-line
                                              verification-email-from
                                              verification-url-maker
-                                             flagged-url-maker
+                                             verification-flagged-url-maker
                                              db-spec-without-db
                                              db-spec
                                              db-name]]
@@ -88,7 +88,7 @@
                            verification-email-subject-line
                            verification-email-from
                            verification-url-maker
-                           flagged-url-maker))
+                           verification-flagged-url-maker))
 
   (ANY user-uri-template
        [user-id]

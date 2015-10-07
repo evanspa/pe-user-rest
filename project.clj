@@ -17,11 +17,11 @@
                  [clojurewerkz/mailer "1.2.0"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [pe-core-utils "0.0.11"]
-                 [pe-user-core "0.1.31"]
+                 [pe-user-core "0.1.32"]
                  [pe-rest-utils "0.0.30"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
-          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.40/"
+          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.41/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:source-paths ["dev"]  ;ensures 'user.clj' gets auto-loaded
                    :plugins [[cider/cider-nrepl "0.10.0-SNAPSHOT"]

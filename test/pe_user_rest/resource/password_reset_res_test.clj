@@ -1,4 +1,4 @@
-(ns pe-user-rest.resource.account-verification-res-test
+(ns pe-user-rest.resource.password-reset-res-test
   (:require [clojure.test :refer :all]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
@@ -14,7 +14,8 @@
             [pe-user-rest.resource.user-res :as userres]
             [pe-user-rest.resource.version.user-res-v001]
             [pe-user-rest.resource.login-res :as loginres]
-            [pe-user-rest.resource.account-verification-res :as verificationres]
+            [pe-user-rest.resource.password-reset-util :as pwdresetutil]
+            [pe-user-rest.resource.password-reset-res :as passwordresetres]
             [pe-user-rest.meta :as meta]
             [pe-user-core.ddl :as uddl]
             [pe-jdbc-utils.core :as jcore]
@@ -37,7 +38,7 @@
                                              userhdr-delete-reason
                                              entity-uri-prefix
                                              user-uri-template
-                                             verification-uri-template
+                                             password-reset-uri-template
                                              users-uri-template
                                              login-uri-template
                                              fixture-maker
@@ -45,9 +46,14 @@
                                              verification-email-subject-line
                                              verification-email-from
                                              verification-url-maker
-                                             verification-success-mustache-template
-                                             verification-error-mustache-template
                                              verification-flagged-url-maker
+                                             password-reset-email-mustache-template
+                                             password-reset-email-subject-line
+                                             password-reset-email-from
+                                             password-reset-url-maker
+                                             password-reset-flagged-url-maker
+                                             password-reset-success-mustache-template
+                                             password-reset-error-mustache-template
                                              db-spec-without-db
                                              db-spec
                                              db-name]]
@@ -110,16 +116,16 @@
                          userhdr-if-unmodified-since
                          userhdr-if-modified-since
                          userhdr-delete-reason))
-  (ANY verification-uri-template
+  (ANY password-reset-uri-template
        [user-id
-        verification-token]
-       (verificationres/account-verification-res db-spec
-                                                 base-url
-                                                 entity-uri-prefix
-                                                 (Long. user-id)
-                                                 verification-token
-                                                 verification-success-mustache-template
-                                                 verification-error-mustache-template))
+        password-reset-token]
+       (passwordresetres/password-reset-res db-spec
+                                            base-url
+                                            entity-uri-prefix
+                                            (Long. user-id)
+                                            password-reset-token
+                                            password-reset-success-mustache-template
+                                            password-reset-error-mustache-template))
   (ANY login-uri-template
        []
        (loginres/login-res db-spec
@@ -183,34 +189,36 @@
             [loaded-user-id loaded-user] (usercore/load-user-by-authtoken db-spec
                                                                           (Long. resp-user-id-str)
                                                                           auth-token)]
-        ;; Verify the user
-        (let [verification-token (usercore/create-and-save-verification-token db-spec
-                                                                              (Long. resp-user-id-str)
-                                                                              "smithka@testing.com")
-              verification-uri (str base-url
-                                    entity-uri-prefix
-                                    meta/pathcomp-users
-                                    "/"
-                                    resp-user-id-str
-                                    "/"
-                                    meta/pathcomp-verification
-                                    "/"
-                                    verification-token)
+        ;; Perform password reset
+        (let [password-reset-token (usercore/create-and-save-password-reset-token db-spec
+                                                                                  (Long. resp-user-id-str)
+                                                                                  "smithka@testing.com")
+              password-reset-uri (str base-url
+                                      entity-uri-prefix
+                                      meta/pathcomp-users
+                                      "/"
+                                      resp-user-id-str
+                                      "/"
+                                      meta/pathcomp-password-reset
+                                      "/"
+                                      password-reset-token)
               req (-> (rtucore/req-w-std-hdrs "text"
                                               "html"
                                               nil
                                               "UTF-8;q=1,ISO-8859-1;q=0"
                                               nil
                                               "en-US"
-                                              :get
-                                              verification-uri))
+                                              :post
+                                              password-reset-uri)
+                      (mock/body (format "%s=againInsecure" pwdresetutil/param-new-password))
+                      (mock/content-type "application/x-www-form-urlencoded"))
               resp (app req)
               hdrs (:headers resp)]
           (testing "status code" (is (= 200 (:status resp))))
-          ;; Load user from database
-          (let [[loaded-user-id loaded-user] (usercore/load-user-by-id db-spec (Long. resp-user-id-str))]
+          ;; Load user from database using new password
+          (is (nil? (usercore/authenticate-user-by-password db-spec "smithka@testing.com" "insecure")))
+          (let [[loaded-user-id loaded-user] (usercore/authenticate-user-by-password db-spec "smithka@testing.com" "againInsecure")]
             (is (not (nil? loaded-user-id)))
             (is (= (Long/parseLong resp-user-id-str) loaded-user-id))
             (is (= "Karen Smith" (:user/name loaded-user)))
-            (is (= "smithka@testing.com" (:user/email loaded-user)))
-            (is (not (nil? (:user/verified-at loaded-user))))))))))
+            (is (= "smithka@testing.com" (:user/email loaded-user)))))))))

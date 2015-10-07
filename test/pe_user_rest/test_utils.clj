@@ -11,6 +11,8 @@
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]))
 
+(delivery-mode! :test)
+
 (def db-name "test_db")
 
 (defn db-spec-fn
@@ -48,7 +50,8 @@
                       uddl/v1-user-add-suspended-at-col
                       uddl/v1-user-add-suspended-reason-col
                       uddl/v1-user-add-suspended-count-col
-                      uddl/v2-create-email-verification-token-ddl)
+                      uddl/v2-create-email-verification-token-ddl
+                      uddl/v3-create-password-reset-token-ddl)
     (jcore/with-try-catch-exec-as-query db-spec
       (uddl/v0-create-updated-count-inc-trigger-fn db-spec))
     (jcore/with-try-catch-exec-as-query db-spec
@@ -72,28 +75,44 @@
 (def entity-uri-prefix "/testing/")
 (def userhdr-establish-session "user-establish-session")
 
-(def verification-email-mustache-template "email/templates/testing.html.mustache")
-(def verification-email-subject-line "testing subject")
-(def verification-email-from "testing@example.com")
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Account verification related
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def verification-email-mustache-template "email/templates/account-verification.html.mustache")
+(def verification-email-subject-line "account verification")
+(def verification-email-from "verification@example.com")
 
 (defn verification-url-maker
   [user-id verification-token]
   (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-verification "/" verification-token))
 
-(defn flagged-url-maker
+(defn verification-flagged-url-maker
   [user-id verification-token]
-  (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-flagged "/" verification-token))
+  (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-verification-flagged "/" verification-token))
 
-(def veri-verified-mustache-template "web/templates/testing.account-verified.html.mustache")
-(def veri-error-mustache-template "web/templates/testing.verification-error.html.mustache")
+(def verification-success-mustache-template "web/templates/verification-success.html.mustache")
+(def verification-error-mustache-template "web/templates/verification-error.html.mustache")
 
-(delivery-mode! :test)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Password reset related
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def password-reset-email-mustache-template "email/templates/password-reset.html.mustache")
+(def password-reset-email-subject-line "password reset")
+(def password-reset-email-from "password-reset@example.com")
+
+(defn password-reset-url-maker
+  [user-id password-reset-token]
+  (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-send-password-reset-email "/" password-reset-token))
+
+(defn password-reset-flagged-url-maker
+  [user-id password-reset-token]
+  (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-password-reset-flagged "/" password-reset-token))
+
+(def password-reset-success-mustache-template "web/templates/password-reset-success.html.mustache")
+(def password-reset-error-mustache-template "web/templates/password-reset-error.html.mustache")
 
 (def users-uri-template
-  (rucore/make-abs-link-href base-url
-                             (format "%s%s"
-                                     entity-uri-prefix
-                                     meta/pathcomp-users)))
+  (rucore/make-abs-link-href base-url (format "%s%s" entity-uri-prefix meta/pathcomp-users)))
 
 (def user-uri-template
   (format "%s%s%s/:user-id"
@@ -107,6 +126,26 @@
           entity-uri-prefix
           meta/pathcomp-users
           meta/pathcomp-verification))
+
+(def send-password-reset-email-uri-template
+  (format "%s%s/%s"
+          base-url
+          entity-uri-prefix
+          meta/pathcomp-send-password-reset-email))
+
+(def prepare-password-reset-uri-template
+  (format "%s%s%s/:user-id/%s/:password-reset-token"
+          base-url
+          entity-uri-prefix
+          meta/pathcomp-users
+          meta/pathcomp-prepare-password-reset))
+
+(def password-reset-uri-template
+  (format "%s%s%s/:user-id/%s/:password-reset-token"
+          base-url
+          entity-uri-prefix
+          meta/pathcomp-users
+          meta/pathcomp-password-reset))
 
 (def login-uri-template
   (rucore/make-abs-link-href base-url

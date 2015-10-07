@@ -89,6 +89,4 @@
                                         (userresutils/get-plaintext-auth-token ctx
                                                                                auth-scheme
                                                                                auth-scheme-param-name)))
-  :handle-created (fn [ctx] (rucore/handle-resp ctx
-                                                hdr-auth-token
-                                                hdr-error-mask)))
+  :handle-created (fn [ctx] (rucore/handle-resp ctx hdr-auth-token hdr-error-mask)))

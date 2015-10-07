@@ -47,8 +47,8 @@
    veri-verified-mustache-template
    veri-error-mustache-template]
   :available-media-types ["text/html"]
-  :available-charsets rumeta/supported-char-sets
-  :available-languages rumeta/supported-languages
+  ;:available-charsets rumeta/supported-char-sets
+  ;:available-languages rumeta/supported-languages
   :allowed-methods [:get]
   :handle-ok (fn [ctx]
                (verify-user ctx
@@ -60,25 +60,3 @@
                             verification-token
                             veri-verified-mustache-template
                             veri-error-mustache-template)))
-
-#_(defresource request-verification-res
-  [db-spec
-   base-url
-   entity-uri-prefix
-   user-id
-   verification-token-in-ctx
-   veri-request-success-mustache-template
-   veri-request-error-mustache-template]
-  :available-media-types ["text/html"]
-  :available-charsets rumeta/supported-char-sets
-  :available-languages rumeta/supported-languages
-  :allowed-methods [:get]
-  :exists? (fn [ctx] (not (nil? (usercore/load-user-by-id db-spec user-id))))
-  :handle-ok (fn [ctx]
-               (verify-user ctx
-                            db-spec
-                            base-url
-                            entity-uri-prefix
-                            (:uri (:request ctx))
-                            user-id
-                            verification-token)))

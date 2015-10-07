@@ -18,6 +18,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def logout-relation :logout)
 (def send-verification-email-relation :send-verification-email)
+(def send-password-reset-email-relation :send-password-reset-email)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; URL path components
@@ -26,9 +27,15 @@
 (def pathcomp-login "login")
 (def pathcomp-light-login "light-login")
 (def pathcomp-logout "logout")
-(def pathcomp-verification "verification")
-(def pathcomp-flagged "flagged")
+
 (def pathcomp-send-verification-email "send-verification-email")
+(def pathcomp-verification "verification")
+(def pathcomp-verification-flagged "verification-flagged")
+
+(def pathcomp-send-password-reset-email "send-password-reset-email")
+(def pathcomp-prepare-password-reset "prepare-password-reset")
+(def pathcomp-password-reset "password-reset")
+(def pathcomp-password-reset-flagged "password-reset-flagged")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Information about this REST API, including supported content
