@@ -56,6 +56,7 @@
                                    base-url
                                    entity-uri-prefix
                                    send-password-reset-email-uri
+                                   plaintext-auth-token ; not used
                                    send-password-reset-email-post-as-do-body
                                    merge-embedded-fn
                                    merge-links-fn]
