@@ -35,7 +35,7 @@
           (resp (render-resource password-reset-form-mustache-template
                                  (merge user
                                         {:password-reset-form-action password-reset-form-action
-                                         pwdresetutil/param-new-password pwdresetutil/param-new-password})))
+                                         (keyword pwdresetutil/param-new-password) pwdresetutil/param-new-password})))
           (resp (render-resource password-reset-error-mustache-template {}))))
       (catch Exception e
         (resp (render-resource password-reset-error-mustache-template {}))))))

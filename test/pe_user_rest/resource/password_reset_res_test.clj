@@ -3,6 +3,7 @@
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [clojure.java.jdbc :as j]
+            [ring.util.codec :refer [url-decode url-encode]]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [compojure.core :refer [defroutes ANY]]
@@ -122,7 +123,7 @@
        (passwordresetres/password-reset-res db-spec
                                             base-url
                                             entity-uri-prefix
-                                            email
+                                            (url-decode email)
                                             password-reset-token
                                             password-reset-success-mustache-template
                                             password-reset-error-mustache-template))
@@ -197,7 +198,7 @@
                                       entity-uri-prefix
                                       meta/pathcomp-users
                                       "/"
-                                      "smithka@testing.com"
+                                      (url-encode "smithka@testing.com")
                                       "/"
                                       meta/pathcomp-password-reset
                                       "/"

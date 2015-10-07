@@ -3,6 +3,7 @@
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [clojure.java.jdbc :as j]
+            [ring.util.codec :refer [url-decode url-encode]]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [compojure.core :refer [defroutes ANY]]
@@ -116,7 +117,7 @@
        (verificationres/account-verification-res db-spec
                                                  base-url
                                                  entity-uri-prefix
-                                                 email
+                                                 (url-decode email)
                                                  verification-token
                                                  verification-success-mustache-template
                                                  verification-error-mustache-template))
@@ -191,7 +192,7 @@
                                     entity-uri-prefix
                                     meta/pathcomp-users
                                     "/"
-                                    "smithka@testing.com"
+                                    (url-encode "smithka@testing.com")
                                     "/"
                                     meta/pathcomp-verification
                                     "/"
