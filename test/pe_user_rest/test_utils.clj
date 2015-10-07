@@ -86,25 +86,25 @@
 
 (defn verification-url-maker
   [email verification-token]
-  (url-encode (str base-url
-                   entity-uri-prefix
-                   meta/pathcomp-users
-                   email
-                   "/"
-                   meta/pathcomp-verification
-                   "/"
-                   verification-token)))
+  (str base-url
+       entity-uri-prefix
+       meta/pathcomp-users
+       (url-encode email)
+       "/"
+       meta/pathcomp-verification
+       "/"
+       verification-token))
 
 (defn verification-flagged-url-maker
   [email verification-token]
-  (url-encode (str base-url
-                   entity-uri-prefix
-                   meta/pathcomp-users
-                   email
-                   "/"
-                   meta/pathcomp-verification-flagged
-                   "/"
-                   verification-token)))
+  (str base-url
+       entity-uri-prefix
+       meta/pathcomp-users
+       (url-encode email)
+       "/"
+       meta/pathcomp-verification-flagged
+       "/"
+       verification-token))
 
 (def verification-success-mustache-template "web/templates/verification-success.html.mustache")
 (def verification-error-mustache-template "web/templates/verification-error.html.mustache")
@@ -116,27 +116,38 @@
 (def password-reset-email-subject-line "password reset")
 (def password-reset-email-from "password-reset@example.com")
 
-(defn password-reset-url-maker
+(defn prepare-password-reset-url-maker
   [email password-reset-token]
-  (url-encode (str base-url
-                   entity-uri-prefix
-                   meta/pathcomp-users
-                   email
-                   "/"
-                   meta/pathcomp-send-password-reset-email
-                   "/"
-                   password-reset-token)))
+  (str base-url
+       entity-uri-prefix
+       meta/pathcomp-users
+       (url-encode email)
+       "/"
+       meta/pathcomp-send-password-reset-email
+       "/"
+       password-reset-token))
+
+(defn password-reset-form-action-maker
+  [email password-reset-token]
+  (str entity-uri-prefix
+       meta/pathcomp-users
+       "/"
+       (url-encode email)
+       "/"
+       meta/pathcomp-password-reset
+       "/"
+       password-reset-token))
 
 (defn password-reset-flagged-url-maker
   [email password-reset-token]
-  (url-encode (str base-url
-                   entity-uri-prefix
-                   meta/pathcomp-users
-                   email
-                   "/"
-                   meta/pathcomp-password-reset-flagged
-                   "/"
-                   password-reset-token)))
+  (str base-url
+       entity-uri-prefix
+       meta/pathcomp-users
+       (url-encode email)
+       "/"
+       meta/pathcomp-password-reset-flagged
+       "/"
+       password-reset-token))
 
 (def password-reset-success-mustache-template "web/templates/password-reset-success.html.mustache")
 (def password-reset-error-mustache-template "web/templates/password-reset-error.html.mustache")

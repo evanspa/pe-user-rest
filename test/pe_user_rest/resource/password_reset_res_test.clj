@@ -50,7 +50,7 @@
                                              password-reset-email-mustache-template
                                              password-reset-email-subject-line
                                              password-reset-email-from
-                                             password-reset-url-maker
+                                             prepare-password-reset-url-maker
                                              password-reset-flagged-url-maker
                                              password-reset-success-mustache-template
                                              password-reset-error-mustache-template
