@@ -17,11 +17,11 @@
                  [clojurewerkz/mailer "1.2.0"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [pe-core-utils "0.0.11"]
-                 [pe-user-core "0.1.32"]
+                 [pe-user-core "0.1.33"]
                  [pe-rest-utils "0.0.30"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
-          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.42/"
+          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.43/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:source-paths ["dev"]  ;ensures 'user.clj' gets auto-loaded
                    :plugins [[cider/cider-nrepl "0.10.0-SNAPSHOT"]
@@ -33,6 +33,7 @@
                                   [org.clojure/tools.nrepl "0.2.7"]
                                   [org.postgresql/postgresql "9.4-1201-jdbc41"]
                                   [pe-rest-testutils "0.0.7"]
+                                  [ring/ring-codec "1.0.0"]
                                   [ring-server "0.3.1"]
                                   [ring-mock "0.1.5"]]}
              :test {:resource-paths ["test-resources"]}}

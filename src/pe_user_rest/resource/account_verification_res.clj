@@ -19,21 +19,21 @@
    base-url
    entity-uri-prefix
    user-uri
-   user-id
+   email
    verification-token
-   veri-verified-mustache-template
-   veri-error-mustache-template]
+   verification-success-mustache-template
+   verification-error-mustache-template]
   (letfn [(resp [body-str]
             (ring-response {:headers {"content-type" "text/html"}
                             :status 200
                             :body body-str}))]
     (try
-      (let [user (usercore/verify-user db-spec user-id verification-token)]
+      (let [user (usercore/verify-user db-spec email verification-token)]
         (if (not (nil? user))
-          (resp (render-resource veri-verified-mustache-template user))
-          (resp (render-resource veri-error-mustache-template {}))))
+          (resp (render-resource verification-success-mustache-template user))
+          (resp (render-resource verification-error-mustache-template {}))))
       (catch Exception e
-        (resp (render-resource veri-error-mustache-template {}))))))
+        (resp (render-resource verification-error-mustache-template {}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Resource definitions
@@ -42,13 +42,11 @@
   [db-spec
    base-url
    entity-uri-prefix
-   user-id
+   email
    verification-token
-   veri-verified-mustache-template
-   veri-error-mustache-template]
+   verification-success-mustache-template
+   verification-error-mustache-template]
   :available-media-types ["text/html"]
-  ;:available-charsets rumeta/supported-char-sets
-  ;:available-languages rumeta/supported-languages
   :allowed-methods [:get]
   :handle-ok (fn [ctx]
                (verify-user ctx
@@ -56,7 +54,7 @@
                             base-url
                             entity-uri-prefix
                             (:uri (:request ctx))
-                            user-id
+                            email
                             verification-token
-                            veri-verified-mustache-template
-                            veri-error-mustache-template)))
+                            verification-success-mustache-template
+                            verification-error-mustache-template)))

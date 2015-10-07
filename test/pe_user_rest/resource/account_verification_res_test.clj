@@ -41,9 +41,9 @@
                                              users-uri-template
                                              login-uri-template
                                              fixture-maker
-                                             verification-email-mustache-template
-                                             verification-email-subject-line
-                                             verification-email-from
+                                             welcome-and-verification-email-mustache-template
+                                             welcome-and-verification-email-subject-line
+                                             welcome-and-verification-email-from
                                              verification-url-maker
                                              verification-success-mustache-template
                                              verification-error-mustache-template
@@ -88,9 +88,9 @@
                            userhdr-establish-session
                            empty-embedded-resources-fn
                            empty-links-fn
-                           verification-email-mustache-template
-                           verification-email-subject-line
-                           verification-email-from
+                           welcome-and-verification-email-mustache-template
+                           welcome-and-verification-email-subject-line
+                           welcome-and-verification-email-from
                            verification-url-maker
                            verification-flagged-url-maker))
 
@@ -111,12 +111,12 @@
                          userhdr-if-modified-since
                          userhdr-delete-reason))
   (ANY verification-uri-template
-       [user-id
+       [email
         verification-token]
        (verificationres/account-verification-res db-spec
                                                  base-url
                                                  entity-uri-prefix
-                                                 (Long. user-id)
+                                                 email
                                                  verification-token
                                                  verification-success-mustache-template
                                                  verification-error-mustache-template))
@@ -191,7 +191,7 @@
                                     entity-uri-prefix
                                     meta/pathcomp-users
                                     "/"
-                                    resp-user-id-str
+                                    "smithka@testing.com"
                                     "/"
                                     meta/pathcomp-verification
                                     "/"

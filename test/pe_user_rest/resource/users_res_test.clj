@@ -28,9 +28,9 @@
                                              entity-uri-prefix
                                              users-uri-template
                                              fixture-maker
-                                             verification-email-mustache-template
-                                             verification-email-subject-line
-                                             verification-email-from
+                                             welcome-and-verification-email-mustache-template
+                                             welcome-and-verification-email-subject-line
+                                             welcome-and-verification-email-from
                                              verification-url-maker
                                              verification-flagged-url-maker
                                              db-spec-without-db
@@ -67,9 +67,9 @@
                           userhdr-establish-session
                           embedded-resources-fn
                           links-fn
-                          verification-email-mustache-template
-                          verification-email-subject-line
-                          verification-email-from
+                          welcome-and-verification-email-mustache-template
+                          welcome-and-verification-email-subject-line
+                          welcome-and-verification-email-from
                           verification-url-maker
                           verification-flagged-url-maker)))
 

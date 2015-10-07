@@ -20,7 +20,7 @@
    base-url
    entity-uri-prefix
    prepare-password-reset-uri
-   user-id
+   email
    password-reset-token
    password-reset-form-mustache-template
    password-reset-error-mustache-template]
@@ -29,7 +29,7 @@
                             :status 200
                             :body body-str}))]
     (try
-      (let [user (usercore/prepare-password-reset db-spec user-id password-reset-token)]
+      (let [user (usercore/prepare-password-reset db-spec email password-reset-token)]
         (if (not (nil? user))
           (resp (render-resource password-reset-form-mustache-template
                                  (merge user
@@ -45,7 +45,7 @@
   [db-spec
    base-url
    entity-uri-prefix
-   user-id
+   email
    password-reset-token
    password-reset-form-mustache-template
    password-reset-error-mustache-template]
@@ -57,7 +57,7 @@
                                               base-url
                                               entity-uri-prefix
                                               (:uri (:request ctx))
-                                              user-id
+                                              email
                                               password-reset-token
                                               password-reset-form-mustache-template
                                               password-reset-error-mustache-template)))

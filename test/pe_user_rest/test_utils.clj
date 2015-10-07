@@ -2,6 +2,7 @@
   (:require [pe-user-rest.resource.version.login-res-v001]
             [pe-user-rest.resource.version.users-res-v001]
             [pe-user-rest.resource.version.logout-res-v001]
+            [ring.util.codec :refer [url-encode]]
             [pe-user-rest.meta :as meta]
             [clojure.java.jdbc :as j]
             [clojurewerkz.mailer.core :refer [delivery-mode!]]
@@ -78,9 +79,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Account verification related
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def welcome-and-verification-email-mustache-template "email/templates/welcome-and-account-verification.html.mustache")
 (def verification-email-mustache-template "email/templates/account-verification.html.mustache")
-(def verification-email-subject-line "account verification")
-(def verification-email-from "verification@example.com")
+(def welcome-and-verification-email-subject-line "welcome and account verification")
+(def welcome-and-verification-email-from "welcome@example.com")
 
 (defn verification-url-maker
   [user-id verification-token]
@@ -101,12 +103,26 @@
 (def password-reset-email-from "password-reset@example.com")
 
 (defn password-reset-url-maker
-  [user-id password-reset-token]
-  (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-send-password-reset-email "/" password-reset-token))
+  [email password-reset-token]
+  (url-encode (str base-url
+                   entity-uri-prefix
+                   meta/pathcomp-users
+                   email
+                   "/"
+                   meta/pathcomp-send-password-reset-email
+                   "/"
+                   password-reset-token)))
 
 (defn password-reset-flagged-url-maker
-  [user-id password-reset-token]
-  (str base-url entity-uri-prefix meta/pathcomp-users user-id "/" meta/pathcomp-password-reset-flagged "/" password-reset-token))
+  [email password-reset-token]
+  (url-encode (str base-url
+                   entity-uri-prefix
+                   meta/pathcomp-users
+                   email
+                   "/"
+                   meta/pathcomp-password-reset-flagged
+                   "/"
+                   password-reset-token)))
 
 (def password-reset-success-mustache-template "web/templates/password-reset-success.html.mustache")
 (def password-reset-error-mustache-template "web/templates/password-reset-error.html.mustache")
@@ -121,7 +137,7 @@
           meta/pathcomp-users))
 
 (def verification-uri-template
-  (format "%s%s%s/:user-id/%s/:verification-token"
+  (format "%s%s%s/:email/%s/:verification-token"
           base-url
           entity-uri-prefix
           meta/pathcomp-users
@@ -134,14 +150,14 @@
           meta/pathcomp-send-password-reset-email))
 
 (def prepare-password-reset-uri-template
-  (format "%s%s%s/:user-id/%s/:password-reset-token"
+  (format "%s%s%s/:email/%s/:password-reset-token"
           base-url
           entity-uri-prefix
           meta/pathcomp-users
           meta/pathcomp-prepare-password-reset))
 
 (def password-reset-uri-template
-  (format "%s%s%s/:user-id/%s/:password-reset-token"
+  (format "%s%s%s/:email/%s/:password-reset-token"
           base-url
           entity-uri-prefix
           meta/pathcomp-users

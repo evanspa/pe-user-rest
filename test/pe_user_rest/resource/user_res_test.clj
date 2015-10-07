@@ -39,9 +39,9 @@
                                              users-uri-template
                                              login-uri-template
                                              fixture-maker
-                                             verification-email-mustache-template
-                                             verification-email-subject-line
-                                             verification-email-from
+                                             welcome-and-verification-email-mustache-template
+                                             welcome-and-verification-email-subject-line
+                                             welcome-and-verification-email-from
                                              verification-url-maker
                                              verification-flagged-url-maker
                                              db-spec-without-db
@@ -84,9 +84,9 @@
                            userhdr-establish-session
                            empty-embedded-resources-fn
                            empty-links-fn
-                           verification-email-mustache-template
-                           verification-email-subject-line
-                           verification-email-from
+                           welcome-and-verification-email-mustache-template
+                           welcome-and-verification-email-subject-line
+                           welcome-and-verification-email-from
                            verification-url-maker
                            verification-flagged-url-maker))
 

@@ -36,9 +36,9 @@
    hdr-establish-session
    embedded-resources-fn
    links-fn
-   verification-email-mustache-template
-   verification-email-subject-line
-   verification-email-from
+   welcome-and-verification-email-mustache-template
+   welcome-and-verification-email-subject-line
+   welcome-and-verification-email-from
    verification-url-maker-fn
    verification-flagged-url-maker-fn]
   (rucore/put-or-post-invoker ctx
@@ -70,9 +70,9 @@
                                     (send-email-verification-fn version
                                                                 db-spec
                                                                 new-user-id
-                                                                verification-email-mustache-template
-                                                                verification-email-subject-line
-                                                                verification-email-from
+                                                                welcome-and-verification-email-mustache-template
+                                                                welcome-and-verification-email-subject-line
+                                                                welcome-and-verification-email-from
                                                                 verification-url-maker-fn
                                                                 verification-flagged-url-maker-fn))
                                   save-result))
@@ -123,9 +123,9 @@
    hdr-establish-session
    embedded-resources-fn
    links-fn
-   verification-email-mustache-template
-   verification-email-subject-line
-   verification-email-from
+   welcome-and-verification-email-mustache-template
+   welcome-and-verification-email-subject-line
+   welcome-and-verification-email-from
    verification-url-maker-fn
    verification-flagged-url-maker-fn]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
@@ -141,11 +141,9 @@
                                        hdr-establish-session
                                        embedded-resources-fn
                                        links-fn
-                                       verification-email-mustache-template
-                                       verification-email-subject-line
-                                       verification-email-from
+                                       welcome-and-verification-email-mustache-template
+                                       welcome-and-verification-email-subject-line
+                                       welcome-and-verification-email-from
                                        verification-url-maker-fn
                                        verification-flagged-url-maker-fn))
-  :handle-created (fn [ctx] (rucore/handle-resp ctx
-                                                hdr-auth-token
-                                                hdr-error-mask)))
+  :handle-created (fn [ctx] (rucore/handle-resp ctx hdr-auth-token hdr-error-mask)))
