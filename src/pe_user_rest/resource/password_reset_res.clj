@@ -22,15 +22,16 @@
 (defn handle-password-reset!
   [ctx
    db-spec
-   user-id
+   email
    password-reset-token]
   (let [params (get-in ctx [:request :params])
         new-password (get params (keyword pwdresetutil/param-new-password))]
     (try
-      (usercore/reset-password db-spec user-id password-reset-token new-password)
-      {:password-reset-result true}
+      (usercore/reset-password db-spec email password-reset-token new-password)
+      [true {:password-reset-result true}]
       (catch Exception e
-        {:password-reset-result false}))))
+        (log/error e "Exception caught")
+        [true {:password-reset-result false}]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Resources Definitions
@@ -39,17 +40,17 @@
   [db-spec
    base-url
    entity-uri-prefix
-   user-id
+   email
    password-reset-token
    password-reset-success-mustache-template
    password-reset-error-mustache-template]
   :available-media-types ["text/html"]
   :allowed-methods [:post]
-  :post! (fn [ctx] (handle-password-reset! ctx
-                                           db-spec
-                                           user-id
-                                           password-reset-token))
-  :handle-created (fn [ctx]
+  :post! (fn [ctx] (handle-password-reset! ctx db-spec email password-reset-token))
+  :new? false
+  :respond-with-entity? true
+  :multiple-representations? false
+  :handle-ok (fn [ctx]
                     (letfn [(resp [body-str]
                               (ring-response {:headers {"content-type" "text/html"}
                                               :status 200
