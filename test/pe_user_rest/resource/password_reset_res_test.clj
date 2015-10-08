@@ -193,33 +193,35 @@
         ;; Perform password reset
         (let [password-reset-token (usercore/create-and-save-password-reset-token db-spec
                                                                                   (Long. resp-user-id-str)
-                                                                                  "smithka@testing.com")
-              password-reset-uri (str base-url
-                                      entity-uri-prefix
-                                      meta/pathcomp-users
-                                      "/"
-                                      (url-encode "smithka@testing.com")
-                                      "/"
-                                      meta/pathcomp-password-reset
-                                      "/"
-                                      password-reset-token)
-              req (-> (rtucore/req-w-std-hdrs "text"
-                                              "html"
-                                              nil
-                                              "UTF-8;q=1,ISO-8859-1;q=0"
-                                              nil
-                                              "en-US"
-                                              :post
-                                              password-reset-uri)
-                      (mock/body (format "%s=againInsecure" pwdresetutil/param-new-password))
-                      (mock/content-type "application/x-www-form-urlencoded"))
-              resp (app req)
-              hdrs (:headers resp)]
-          (testing "status code" (is (= 200 (:status resp))))
-          ;; Load user from database using new password
-          (is (nil? (usercore/authenticate-user-by-password db-spec "smithka@testing.com" "insecure")))
-          (let [[loaded-user-id loaded-user] (usercore/authenticate-user-by-password db-spec "smithka@testing.com" "againInsecure")]
-            (is (not (nil? loaded-user-id)))
-            (is (= (Long/parseLong resp-user-id-str) loaded-user-id))
-            (is (= "Karen Smith" (:user/name loaded-user)))
-            (is (= "smithka@testing.com" (:user/email loaded-user)))))))))
+                                                                                  "smithka@testing.com")]
+          ; before we can reset the password via the post, we need to 'prepare' first
+          (usercore/prepare-password-reset db-spec "smithka@testing.com" password-reset-token)
+          (let [password-reset-uri (str base-url
+                                        entity-uri-prefix
+                                        meta/pathcomp-users
+                                        "/"
+                                        (url-encode "smithka@testing.com")
+                                        "/"
+                                        meta/pathcomp-password-reset
+                                        "/"
+                                        password-reset-token)
+                req (-> (rtucore/req-w-std-hdrs "text"
+                                                "html"
+                                                nil
+                                                "UTF-8;q=1,ISO-8859-1;q=0"
+                                                nil
+                                                "en-US"
+                                                :post
+                                                password-reset-uri)
+                        (mock/body (format "%s=againInsecure" pwdresetutil/param-new-password))
+                        (mock/content-type "application/x-www-form-urlencoded"))
+                resp (app req)
+                hdrs (:headers resp)]
+            (testing "status code" (is (= 200 (:status resp))))
+            ;; Load user from database using new password
+            (is (nil? (usercore/authenticate-user-by-password db-spec "smithka@testing.com" "insecure")))
+            (let [[loaded-user-id loaded-user] (usercore/authenticate-user-by-password db-spec "smithka@testing.com" "againInsecure")]
+              (is (not (nil? loaded-user-id)))
+              (is (= (Long/parseLong resp-user-id-str) loaded-user-id))
+              (is (= "Karen Smith" (:user/name loaded-user)))
+              (is (= "smithka@testing.com" (:user/email loaded-user))))))))))
