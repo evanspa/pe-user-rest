@@ -22,7 +22,11 @@
    email
    verification-token
    verification-success-mustache-template
-   verification-error-mustache-template]
+   verification-error-mustache-template
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   (letfn [(resp [body-str]
             (ring-response {:headers {"content-type" "text/html"}
                             :status 200
@@ -33,6 +37,20 @@
           (resp (render-resource verification-success-mustache-template user))
           (resp (render-resource verification-error-mustache-template {}))))
       (catch Exception e
+        (log/error e (str "Exception in verify-user. (email: "
+                          email
+                          ", verification-success-mustache-template: "
+                          verification-success-mustache-template
+                          ", verification-error-mustache-template: "
+                          verification-error-mustache-template ")"))
+        (usercore/send-email err-notification-mustache-template
+                             {:exception e
+                              :params [email
+                                       verification-success-mustache-template
+                                       verification-error-mustache-template]}
+                             err-subject
+                             err-from-email
+                             err-to-email)
         (resp (render-resource verification-error-mustache-template {}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -45,7 +63,11 @@
    email
    verification-token
    verification-success-mustache-template
-   verification-error-mustache-template]
+   verification-error-mustache-template
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   :available-media-types ["text/html"]
   :allowed-methods [:get]
   :handle-ok (fn [ctx]
@@ -57,4 +79,8 @@
                             email
                             verification-token
                             verification-success-mustache-template
-                            verification-error-mustache-template)))
+                            verification-error-mustache-template
+                            err-notification-mustache-template
+                            err-subject
+                            err-from-email
+                            err-to-email)))

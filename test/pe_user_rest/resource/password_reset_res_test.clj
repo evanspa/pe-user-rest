@@ -48,6 +48,10 @@
                                              welcome-and-verification-email-from
                                              verification-url-maker
                                              verification-flagged-url-maker
+                                             new-user-notification-mustache-template
+                                             new-user-notification-from-email
+                                             new-user-notification-to-email
+                                             new-user-notification-subject
                                              password-reset-email-mustache-template
                                              password-reset-email-subject-line
                                              password-reset-email-from
@@ -55,6 +59,10 @@
                                              password-reset-flagged-url-maker
                                              password-reset-success-mustache-template
                                              password-reset-error-mustache-template
+                                             err-notification-mustache-template
+                                             err-subject
+                                             err-from-email
+                                             err-to-email
                                              db-spec-without-db
                                              db-spec
                                              db-name]]
@@ -99,7 +107,15 @@
                            welcome-and-verification-email-subject-line
                            welcome-and-verification-email-from
                            verification-url-maker
-                           verification-flagged-url-maker))
+                           verification-flagged-url-maker
+                           new-user-notification-mustache-template
+                           new-user-notification-from-email
+                           new-user-notification-to-email
+                           new-user-notification-subject
+                           err-notification-mustache-template
+                           err-subject
+                           err-from-email
+                           err-to-email))
 
   (ANY user-uri-template
        [user-id]
@@ -116,7 +132,11 @@
                          empty-links-fn
                          userhdr-if-unmodified-since
                          userhdr-if-modified-since
-                         userhdr-delete-reason))
+                         userhdr-delete-reason
+                         err-notification-mustache-template
+                         err-subject
+                         err-from-email
+                         err-to-email))
   (ANY password-reset-uri-template
        [email
         password-reset-token]
@@ -126,7 +146,11 @@
                                             (url-decode email)
                                             password-reset-token
                                             password-reset-success-mustache-template
-                                            password-reset-error-mustache-template))
+                                            password-reset-error-mustache-template
+                                            err-notification-mustache-template
+                                            err-subject
+                                            err-from-email
+                                            err-to-email))
   (ANY login-uri-template
        []
        (loginres/login-res db-spec
@@ -137,7 +161,11 @@
                            entity-uri-prefix
                            empty-embedded-resources-fn
                            empty-links-fn
-                           userhdr-login-failed-reason)))
+                           userhdr-login-failed-reason
+                           err-notification-mustache-template
+                           err-subject
+                           err-from-email
+                           err-to-email)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Middleware-decorated app

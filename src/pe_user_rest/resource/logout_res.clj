@@ -28,28 +28,39 @@
    entity-uri-prefix
    entity-uri
    user-id
-   plaintext-auth-token]
+   plaintext-auth-token
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   (rucore/put-or-post-invoker ctx
                               :post-as-do
                               db-spec
                               base-url
                               entity-uri-prefix
                               entity-uri
-                              nil
-                              nil
+                              nil ; embedded-resources-fn
+                              nil ; links-fn
                               [user-id]
                               plaintext-auth-token
-                              nil
-                              nil
+                              nil ; user-validator-fn
+                              nil ; any-issues-bit
                               body-data-in-transform-fn
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
+                              nil ; body-data-out-transform-fn
+                              nil ; next-entity-id-fn
+                              nil ; save-new-entity-fn
+                              nil ; save-entity-fn
+                              nil ; hdr-establish-session
+                              nil ; make-session-fn
                               do-logout-fn
-                              nil))
+                              nil ; if-unmodified-since-hdr
+                              (fn [exc-and-params]
+                                (usercore/send-email err-notification-mustache-template
+                                                     exc-and-params
+                                                     err-subject
+                                                     err-from-email
+                                                     err-to-email))
+                              #(identity %)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; body-data transformation functions
@@ -73,7 +84,11 @@
    auth-scheme-param-name
    base-url
    entity-uri-prefix
-   user-id]
+   user-id
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -88,5 +103,9 @@
                                         user-id
                                         (userresutils/get-plaintext-auth-token ctx
                                                                                auth-scheme
-                                                                               auth-scheme-param-name)))
+                                                                               auth-scheme-param-name)
+                                        err-notification-mustache-template
+                                        err-subject
+                                        err-from-email
+                                        err-to-email))
   :handle-created (fn [ctx] (rucore/handle-resp ctx hdr-auth-token hdr-error-mask)))

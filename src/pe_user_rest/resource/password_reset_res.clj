@@ -23,14 +23,24 @@
   [ctx
    db-spec
    email
-   password-reset-token]
+   password-reset-token
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   (let [params (get-in ctx [:request :params])
         new-password (get params (keyword pwdresetutil/param-new-password))]
     (try
       (usercore/reset-password db-spec email password-reset-token new-password)
       [true {:password-reset-result true}]
       (catch Exception e
-        (log/error e "Exception caught")
+        (log/error e (str "Exception in handle-password-reset!. (email:" email ")"))
+        (usercore/send-email err-notification-mustache-template
+                             {:exception e
+                              :params [email]}
+                             err-subject
+                             err-from-email
+                             err-to-email)
         [true {:password-reset-result false}]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -43,10 +53,21 @@
    email
    password-reset-token
    password-reset-success-mustache-template
-   password-reset-error-mustache-template]
+   password-reset-error-mustache-template
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   :available-media-types ["text/html"]
   :allowed-methods [:post]
-  :post! (fn [ctx] (handle-password-reset! ctx db-spec email password-reset-token))
+  :post! (fn [ctx] (handle-password-reset! ctx
+                                           db-spec
+                                           email
+                                           password-reset-token
+                                           err-notification-mustache-template
+                                           err-subject
+                                           err-from-email
+                                           err-to-email))
   :new? false
   :respond-with-entity? true
   :multiple-representations? false

@@ -76,6 +76,11 @@
 (def entity-uri-prefix "/testing/")
 (def userhdr-establish-session "user-establish-session")
 
+(def err-notification-mustache-template "email/templates/err-notification.html.mustache")
+(def err-subject "Error!")
+(def err-from-email "errors@example.com")
+(def err-to-email "evansp2@gmail.com")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Account verification related
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -83,6 +88,11 @@
 (def verification-email-mustache-template "email/templates/account-verification.html.mustache")
 (def welcome-and-verification-email-subject-line "welcome and account verification")
 (def welcome-and-verification-email-from "welcome@example.com")
+
+(def new-user-notification-mustache-template "email/templates/new-signup-notification.html.mustache")
+(def new-user-notification-from-email "alerts@example.com")
+(def new-user-notification-to-email "evansp2@gmail.com")
+(def new-user-notification-subject "New sign-up!")
 
 (defn verification-url-maker
   [email verification-token]

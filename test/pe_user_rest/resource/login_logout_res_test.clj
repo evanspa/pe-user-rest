@@ -33,6 +33,10 @@
                                              light-login-uri-template
                                              logout-uri-template
                                              fixture-maker
+                                             err-notification-mustache-template
+                                             err-subject
+                                             err-from-email
+                                             err-to-email
                                              db-spec-without-db
                                              db-spec
                                              db-name]]
@@ -71,7 +75,11 @@
                            entity-uri-prefix
                            empty-embedded-resources-fn
                            empty-links-fn
-                           userhdr-login-failed-reason))
+                           userhdr-login-failed-reason
+                           err-notification-mustache-template
+                           err-subject
+                           err-from-email
+                           err-to-email))
   (ANY light-login-uri-template
        []
        (loginres/light-login-res db-spec
@@ -80,7 +88,11 @@
                                  userhdr-error-mask
                                  base-url
                                  entity-uri-prefix
-                                 userhdr-login-failed-reason))
+                                 userhdr-login-failed-reason
+                                 err-notification-mustache-template
+                                 err-subject
+                                 err-from-email
+                                 err-to-email))
   (ANY logout-uri-template
        [user-id]
        (logoutres/logout-res db-spec
@@ -91,7 +103,11 @@
                              user-auth-scheme-param-name
                              base-url
                              entity-uri-prefix
-                             (Long. user-id))))
+                             (Long. user-id)
+                             err-notification-mustache-template
+                             err-subject
+                             err-from-email
+                             err-to-email)))
 
 (defroutes routes-with-nonempty-embedded-and-links
   (ANY login-uri-template
@@ -125,7 +141,11 @@
                                                         (format "%s%s"
                                                                 entity-uri-prefix
                                                                 "pears/142")))))
-                           userhdr-login-failed-reason))
+                           userhdr-login-failed-reason
+                           err-notification-mustache-template
+                           err-subject
+                           err-from-email
+                           err-to-email))
   (ANY light-login-uri-template
        []
        (loginres/light-login-res db-spec
@@ -133,7 +153,12 @@
                                  userhdr-auth-token
                                  userhdr-error-mask
                                  base-url
-                                 entity-uri-prefix))
+                                 entity-uri-prefix
+                                 userhdr-login-failed-reason
+                                 err-notification-mustache-template
+                                 err-subject
+                                 err-from-email
+                                 err-to-email))
   (ANY logout-uri-template
        [user-id]
        (logoutres/logout-res db-spec
@@ -144,7 +169,11 @@
                              user-auth-scheme-param-name
                              base-url
                              entity-uri-prefix
-                             (Long. user-id))))
+                             (Long. user-id)
+                             err-notification-mustache-template
+                             err-subject
+                             err-from-email
+                             err-to-email)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Middleware-decorated app

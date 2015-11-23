@@ -30,7 +30,11 @@
    entity-uri
    embedded-resources-fn
    links-fn
-   login-fn]
+   login-fn
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   (rucore/put-or-post-invoker ctx
                               :post-as-do
                               db-spec
@@ -40,18 +44,25 @@
                               embedded-resources-fn
                               links-fn
                               []
-                              nil
-                              nil
-                              nil
+                              nil ; plaintext-auth-token
+                              nil ; user-validator-fn
+                              nil ; any-issues-bit
                               body-data-in-transform-fn
                               body-data-out-transform-fn
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              login-fn
-                              nil))
+                              nil ; next-entity-id-fn
+                              nil ; save-new-entity-fn
+                              nil ; save-entity-fn
+                              nil ; hdr-establish-session
+                              nil ; make-session-fn
+                              login-fn ; post-as-do-fn
+                              nil ; if-unmodified-since-hdr
+                              (fn [exc-and-params]
+                                (usercore/send-email err-notification-mustache-template
+                                                     exc-and-params
+                                                     err-subject
+                                                     err-from-email
+                                                     err-to-email))
+                              (fn [body-data] (dissoc body-data :user/password))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; body-data transformation functions
@@ -81,7 +92,11 @@
    entity-uri-prefix
    embedded-resources-fn
    links-fn
-   login-failed-reason-hdr]
+   login-failed-reason-hdr
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -94,7 +109,11 @@
                                        (:uri (:request ctx))
                                        embedded-resources-fn
                                        links-fn
-                                       do-login-fn))
+                                       do-login-fn
+                                       err-notification-mustache-template
+                                       err-subject
+                                       err-from-email
+                                       err-to-email))
   :handle-created (fn [ctx] (rucore/handle-resp ctx
                                                 hdr-auth-token
                                                 hdr-error-mask
@@ -107,7 +126,11 @@
    hdr-error-mask
    base-url
    entity-uri-prefix
-   login-failed-reason-hdr]
+   login-failed-reason-hdr
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -118,9 +141,13 @@
                                        base-url
                                        entity-uri-prefix
                                        (:uri (:request ctx))
-                                       nil
-                                       nil
-                                       do-light-login-fn))
+                                       nil ; embedded-resources-fn
+                                       nil ; links-fn
+                                       do-light-login-fn
+                                       err-notification-mustache-template
+                                       err-subject
+                                       err-from-email
+                                       err-to-email))
   :handle-created (fn [ctx] (rucore/handle-resp ctx
                                                 hdr-auth-token
                                                 hdr-error-mask

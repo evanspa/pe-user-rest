@@ -24,7 +24,11 @@
    password-reset-token
    password-reset-form-mustache-template
    password-reset-form-action
-   password-reset-error-mustache-template]
+   password-reset-error-mustache-template
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   (letfn [(resp [body-str]
             (ring-response {:headers {"content-type" "text/html"}
                             :status 200
@@ -38,6 +42,23 @@
                                          (keyword pwdresetutil/param-new-password) pwdresetutil/param-new-password})))
           (resp (render-resource password-reset-error-mustache-template {}))))
       (catch Exception e
+        (log/error e (str "Exception in handle-prepare-password-reset. (email: "
+                          email
+                          ", password-reset-form-mustache-template: "
+                          password-reset-form-mustache-template
+                          ", password-reset-form-action: "
+                          password-reset-form-action
+                          ", password-reset-error-mustache-template: "
+                          password-reset-error-mustache-template ")"))
+        (usercore/send-email err-notification-mustache-template
+                             {:exception e
+                              :params [email
+                                       password-reset-form-mustache-template
+                                       password-reset-form-action
+                                       password-reset-error-mustache-template]}
+                             err-subject
+                             err-from-email
+                             err-to-email)
         (resp (render-resource password-reset-error-mustache-template {}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,7 +72,11 @@
    password-reset-token
    password-reset-form-mustache-template
    password-reset-form-action
-   password-reset-error-mustache-template]
+   password-reset-error-mustache-template
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   :available-media-types ["text/html"]
   :allowed-methods [:get]
   :handle-ok (fn [ctx]
@@ -64,4 +89,8 @@
                                               password-reset-token
                                               password-reset-form-mustache-template
                                               password-reset-form-action
-                                              password-reset-error-mustache-template)))
+                                              password-reset-error-mustache-template
+                                              err-notification-mustache-template
+                                              err-subject
+                                              err-from-email
+                                              err-to-email)))

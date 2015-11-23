@@ -33,26 +33,30 @@
    verification-email-subject-line
    verification-email-from
    verification-url-maker-fn
-   verification-flagged-url-maker-fn]
+   verification-flagged-url-maker-fn
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   (rucore/put-or-post-invoker ctx
                               :post-as-do
                               db-spec
                               base-url
                               entity-uri-prefix
                               entity-uri
-                              nil
-                              nil
+                              nil ; embedded-resources-fn
+                              nil ; links-fn
                               [user-id]
                               plaintext-auth-token
-                              nil
-                              nil
+                              nil ; user-validator-fn
+                              nil ; any-issues-bit
                               body-data-in-transform-fn
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
+                              nil ; body-data-out-transform-fn
+                              nil ; next-entity-id-fn
+                              nil ; save-new-entity-fn
+                              nil ; save-entity-fn
+                              nil ; hdr-establish-session
+                              nil ; make-session-fn
                               (fn [version
                                    db-spec
                                    user-id
@@ -71,7 +75,14 @@
                                                                verification-email-from
                                                                verification-url-maker-fn
                                                                verification-flagged-url-maker-fn))
-                              nil))
+                              nil ; if-unmodified-since-hdr
+                              (fn [exc-and-params]
+                                (usercore/send-email err-notification-mustache-template
+                                                     exc-and-params
+                                                     err-subject
+                                                     err-from-email
+                                                     err-to-email))
+                              #(identity %)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; body-data transformation functions
@@ -100,7 +111,11 @@
    verification-email-subject-line
    verification-email-from
    verification-url-maker-fn
-   verification-flagged-url-maker-fn]
+   verification-flagged-url-maker-fn
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -125,7 +140,11 @@
                                                    verification-email-subject-line
                                                    verification-email-from
                                                    verification-url-maker-fn
-                                                   verification-flagged-url-maker-fn))
+                                                   verification-flagged-url-maker-fn
+                                                   err-notification-mustache-template
+                                                   err-subject
+                                                   err-from-email
+                                                   err-to-email))
   :handle-created (fn [ctx] (rucore/handle-resp ctx
                                                 hdr-auth-token
                                                 hdr-error-mask)))

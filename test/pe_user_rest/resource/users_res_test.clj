@@ -33,6 +33,14 @@
                                              welcome-and-verification-email-from
                                              verification-url-maker
                                              verification-flagged-url-maker
+                                             new-user-notification-mustache-template
+                                             new-user-notification-from-email
+                                             new-user-notification-to-email
+                                             new-user-notification-subject
+                                             err-notification-mustache-template
+                                             err-subject
+                                             err-from-email
+                                             err-to-email
                                              db-spec-without-db
                                              db-spec
                                              db-name]]))
@@ -71,7 +79,15 @@
                           welcome-and-verification-email-subject-line
                           welcome-and-verification-email-from
                           verification-url-maker
-                          verification-flagged-url-maker)))
+                          verification-flagged-url-maker
+                          new-user-notification-mustache-template
+                          new-user-notification-from-email
+                          new-user-notification-to-email
+                          new-user-notification-subject
+                          err-notification-mustache-template
+                          err-subject
+                          err-from-email
+                          err-to-email)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Middleware-decorated app

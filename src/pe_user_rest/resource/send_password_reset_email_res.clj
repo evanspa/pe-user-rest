@@ -31,26 +31,30 @@
    password-reset-email-subject-line
    password-reset-email-from
    password-reset-url-maker-fn
-   password-reset-flagged-url-maker-fn]
+   password-reset-flagged-url-maker-fn
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   (rucore/put-or-post-invoker ctx
                               :post-as-do
                               db-spec
                               base-url
                               entity-uri-prefix
                               entity-uri
-                              nil
-                              nil
+                              nil ; embedded-resources-fn
+                              nil ; links-fn
                               []
-                              nil
-                              nil
-                              nil
+                              nil ; plaintext-auth-token
+                              nil ; user-validator-fn
+                              nil ; any-issues-bit
                               body-data-in-transform-fn
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
+                              nil ; body-data-out-transform-fn
+                              nil ; next-entity-id-fn
+                              nil ; save-new-entity-fn
+                              nil ; save-entity-fn
+                              nil ; hdr-establish-session
+                              nil ; make-session-fn
                               (fn [version
                                    db-spec
                                    base-url
@@ -68,7 +72,14 @@
                                                                  password-reset-email-from
                                                                  password-reset-url-maker-fn
                                                                  password-reset-flagged-url-maker-fn))
-                              nil))
+                              nil ; if-unmodified-since-hdr
+                              (fn [exc-and-params]
+                                (usercore/send-email err-notification-mustache-template
+                                                     exc-and-params
+                                                     err-subject
+                                                     err-from-email
+                                                     err-to-email))
+                              #(identity %)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; body-data transformation functions
@@ -93,7 +104,11 @@
    password-reset-email-subject-line
    password-reset-email-from
    password-reset-url-maker-fn
-   password-reset-flagged-url-maker-fn]
+   password-reset-flagged-url-maker-fn
+   err-notification-mustache-template
+   err-subject
+   err-from-email
+   err-to-email]
   :available-media-types (rucore/enumerate-media-types (meta/supported-media-types mt-subtype-prefix))
   :available-charsets rumeta/supported-char-sets
   :available-languages rumeta/supported-languages
@@ -108,5 +123,9 @@
                                                      password-reset-email-subject-line
                                                      password-reset-email-from
                                                      password-reset-url-maker-fn
-                                                     password-reset-flagged-url-maker-fn))
+                                                     password-reset-flagged-url-maker-fn
+                                                     err-notification-mustache-template
+                                                     err-subject
+                                                     err-from-email
+                                                     err-to-email))
   :handle-created (fn [ctx] (rucore/handle-resp ctx nil hdr-error-mask)))
