@@ -68,7 +68,8 @@
 ;; 0.0.1 Load user function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod load-user-fn meta/v001
-  [version
+  [ctx
+   version
    db-spec
    user-id
    plaintext-auth-token
