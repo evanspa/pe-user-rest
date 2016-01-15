@@ -16,12 +16,12 @@
                  [clj-time "0.8.0"]
                  [clojurewerkz/mailer "1.2.0"]
                  [de.ubercode.clostache/clostache "1.4.0"]
-                 [pe-core-utils "0.0.11"]
-                 [pe-user-core "0.1.38"]
-                 [pe-rest-utils "0.0.35"]]
+                 [pe-core-utils "0.0.12"]
+                 [pe-user-core "0.1.39"]
+                 [pe-rest-utils "0.0.37"]]
   :resource-paths ["resources"]
   :codox {:exclude [user]
-          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.52/"
+          :src-dir-uri "https://github.com/evanspa/pe-user-rest/blob/0.0.53/"
           :src-linenum-anchor-prefix "L"}
   :profiles {:dev {:source-paths ["dev"]  ;ensures 'user.clj' gets auto-loaded
                    :plugins [[cider/cider-nrepl "0.10.0-SNAPSHOT"]
