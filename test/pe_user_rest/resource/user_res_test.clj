@@ -134,7 +134,7 @@
                            userhdr-error-mask
                            base-url
                            entity-uri-prefix
-                           empty-embedded-resources-fn
+                           (fn [ctx] empty-embedded-resources-fn)
                            empty-links-fn
                            userhdr-login-failed-reason
                            err-notification-mustache-template

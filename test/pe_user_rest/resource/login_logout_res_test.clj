@@ -46,15 +46,16 @@
                                                            assert-unauthorized-login
                                                            assert-unauthorized-light-login
                                                            assert-malformed-login]]))
-(defn empty-embedded-resources-fn
-  [version
-   base-url
-   entity-uri-prefix
-   entity-uri
-   db-spec
-   accept-format-ind
-   user-id]
-  {})
+(defn empty-embedded-resources-fn-maker
+  [ctx]
+  (fn [version
+       base-url
+       entity-uri-prefix
+       entity-uri
+       db-spec
+       accept-format-ind
+       user-id]
+    {}))
 
 (defn empty-links-fn
   [version
@@ -73,7 +74,7 @@
                            userhdr-error-mask
                            base-url
                            entity-uri-prefix
-                           empty-embedded-resources-fn
+                           empty-embedded-resources-fn-maker
                            empty-links-fn
                            userhdr-login-failed-reason
                            err-notification-mustache-template
@@ -118,15 +119,15 @@
                            userhdr-error-mask
                            base-url
                            entity-uri-prefix
-                           (fn [version
-                                base-url
-                                entity-uri-prefix
-                                entity-uri
-                                db-spec
-                                accept-format-ind
-                                user-id]
-                             [{:spring :lambs}
-                              {:meatball :sub}])
+                           (fn [ctx] (fn [version
+                                          base-url
+                                          entity-uri-prefix
+                                          entity-uri
+                                          db-spec
+                                          accept-format-ind
+                                          user-id]
+                                       [{:spring :lambs}
+                                        {:meatball :sub}]))
                            (fn [version
                                 base-url
                                 entity-uri-prefix

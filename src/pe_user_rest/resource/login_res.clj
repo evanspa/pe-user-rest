@@ -90,7 +90,7 @@
    hdr-error-mask
    base-url
    entity-uri-prefix
-   embedded-resources-fn
+   embedded-resources-fn-maker
    links-fn
    login-failed-reason-hdr
    err-notification-mustache-template
@@ -107,7 +107,7 @@
                                        base-url
                                        entity-uri-prefix
                                        (:uri (:request ctx))
-                                       embedded-resources-fn
+                                       (embedded-resources-fn-maker ctx)
                                        links-fn
                                        do-login-fn
                                        err-notification-mustache-template
