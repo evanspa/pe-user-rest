@@ -45,15 +45,16 @@
                                              db-spec
                                              db-name]]))
 
-(defn embedded-resources-fn
-  [version
-   base-url
-   entity-uri-prefix
-   entity-uri
-   db-spec
-   accept-format-ind
-   user-entid]
-  {})
+(defn embedded-resources-fn-maker
+  [ctx]
+  (fn [version
+       base-url
+       entity-uri-prefix
+       entity-uri
+       db-spec
+       accept-format-ind
+       user-entid]
+    []))
 
 (defn links-fn
   [version
@@ -73,7 +74,7 @@
                           base-url
                           entity-uri-prefix
                           userhdr-establish-session
-                          embedded-resources-fn
+                          embedded-resources-fn-maker
                           links-fn
                           welcome-and-verification-email-mustache-template
                           welcome-and-verification-email-subject-line

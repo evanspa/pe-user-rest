@@ -62,15 +62,16 @@
                                                            assert-unauthorized-light-login
                                                            assert-malformed-login]]))
 
-(defn empty-embedded-resources-fn
-  [version
-   base-url
-   entity-uri-prefix
-   entity-uri
-   db-spec
-   accept-format-ind
-   user-id]
-  {})
+(defn empty-embedded-resources-fn-maker
+  [ctx]
+  (fn [version
+       base-url
+       entity-uri-prefix
+       entity-uri
+       db-spec
+       accept-format-ind
+       user-entid]
+    []))
 
 (defn empty-links-fn
   [version
@@ -90,7 +91,7 @@
                            base-url
                            entity-uri-prefix
                            userhdr-establish-session
-                           empty-embedded-resources-fn
+                           empty-embedded-resources-fn-maker
                            empty-links-fn
                            welcome-and-verification-email-mustache-template
                            welcome-and-verification-email-subject-line
@@ -117,7 +118,7 @@
                          base-url
                          entity-uri-prefix
                          (Long. user-id)
-                         empty-embedded-resources-fn
+                         nil
                          empty-links-fn
                          userhdr-if-unmodified-since
                          userhdr-if-modified-since
@@ -134,7 +135,7 @@
                            userhdr-error-mask
                            base-url
                            entity-uri-prefix
-                           (fn [ctx] empty-embedded-resources-fn)
+                           empty-embedded-resources-fn-maker
                            empty-links-fn
                            userhdr-login-failed-reason
                            err-notification-mustache-template
@@ -488,7 +489,7 @@
         (assert-success-login app
                               {"user/username-or-email" "smithk"
                                "user/password" "insecure"}
-                              {}
+                              []
                               {})
         ;; delete the user
         (let [user-uri (str base-url
