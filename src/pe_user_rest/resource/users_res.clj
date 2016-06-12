@@ -143,7 +143,7 @@
    base-url
    entity-uri-prefix
    hdr-establish-session
-   embedded-resources-fn
+   embedded-resources-fn-maker
    links-fn
    welcome-and-verification-email-mustache-template
    welcome-and-verification-email-subject-line
@@ -172,7 +172,7 @@
                                  entity-uri-prefix
                                  (:uri (:request ctx))
                                  hdr-establish-session
-                                 embedded-resources-fn
+                                 (embedded-resources-fn-maker ctx)
                                  links-fn
                                  welcome-and-verification-email-mustache-template
                                  welcome-and-verification-email-subject-line
