@@ -46,8 +46,8 @@
                                              welcome-and-verification-email-subject-line
                                              welcome-and-verification-email-from
                                              verification-url-maker
-                                             verification-success-mustache-template
-                                             verification-error-mustache-template
+                                             verification-success-web-url
+                                             verification-error-web-url
                                              verification-flagged-url-maker
                                              new-user-notification-mustache-template
                                              new-user-notification-from-email
@@ -140,8 +140,8 @@
                                                  entity-uri-prefix
                                                  (url-decode email)
                                                  verification-token
-                                                 verification-success-mustache-template
-                                                 verification-error-mustache-template
+                                                 verification-success-web-url
+                                                 verification-error-web-url
                                                  err-notification-mustache-template
                                                  err-subject
                                                  err-from-email
@@ -236,7 +236,7 @@
                                               verification-uri))
               resp (app req)
               hdrs (:headers resp)]
-          (testing "status code" (is (= 200 (:status resp))))
+          (testing "status code" (is (= 302 (:status resp))))
           ;; Load user from database
           (let [[loaded-user-id loaded-user] (usercore/load-user-by-id db-spec (Long. resp-user-id-str))]
             (is (not (nil? loaded-user-id)))

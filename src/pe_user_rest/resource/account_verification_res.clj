@@ -5,6 +5,7 @@
             [pe-rest-utils.macros :refer [defmulti-by-version]]
             [liberator.representation :refer [ring-response]]
             [clostache.parser :refer [render-resource]]
+            [ring.util.response :refer [redirect]]
             [pe-rest-utils.core :as rucore]
             [pe-rest-utils.meta :as rumeta]
             [pe-user-rest.utils :as userresutils]
@@ -21,37 +22,30 @@
    user-uri
    email
    verification-token
-   verification-success-mustache-template
-   verification-error-mustache-template
+   verification-success-web-url
+   verification-error-web-url
    err-notification-mustache-template
    err-subject
    err-from-email
    err-to-email]
-  (letfn [(resp [body-str]
-            (ring-response {:headers {"content-type" "text/html"}
-                            :status 200
-                            :body body-str}))]
-    (try
-      (let [user (usercore/verify-user db-spec email verification-token)]
-        (if (not (nil? user))
-          (resp (render-resource verification-success-mustache-template user))
-          (resp (render-resource verification-error-mustache-template {}))))
-      (catch Exception e
-        (log/error e (str "Exception in verify-user. (email: "
-                          email
-                          ", verification-success-mustache-template: "
-                          verification-success-mustache-template
-                          ", verification-error-mustache-template: "
-                          verification-error-mustache-template ")"))
-        (usercore/send-email err-notification-mustache-template
-                             {:exception e
-                              :params [email
-                                       verification-success-mustache-template
-                                       verification-error-mustache-template]}
-                             err-subject
-                             err-from-email
-                             err-to-email)
-        (resp (render-resource verification-error-mustache-template {}))))))
+  (try
+    (let [user (usercore/verify-user db-spec email verification-token)]
+      (if (not (nil? user))
+        (ring-response (redirect verification-success-web-url))
+        (ring-response (redirect verification-error-web-url))))
+    (catch Exception e
+      (log/error e (str "Exception in verify-user. (email: "
+                        email
+                        ", verification-success-web-url: "
+                        verification-success-web-url
+                        ", verification-error-web-url: "
+                        verification-error-web-url ")"))
+      (usercore/send-email err-notification-mustache-template
+                           {:exception e}
+                           err-subject
+                           err-from-email
+                           err-to-email)
+      (ring-response (redirect verification-error-web-url)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Resource definitions

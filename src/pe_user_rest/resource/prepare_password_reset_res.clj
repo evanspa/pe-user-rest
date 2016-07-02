@@ -9,6 +9,7 @@
             [pe-rest-utils.meta :as rumeta]
             [pe-user-rest.utils :as userresutils]
             [pe-user-core.core :as usercore]
+            [ring.util.response :refer [redirect]]
             [pe-user-rest.resource.password-reset-util :as pwdresetutil]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -22,44 +23,33 @@
    prepare-password-reset-uri
    email
    password-reset-token
-   password-reset-form-mustache-template
-   password-reset-form-action
-   password-reset-error-mustache-template
+   password-reset-web-url
+   password-reset-error-web-url
    err-notification-mustache-template
    err-subject
    err-from-email
    err-to-email]
-  (letfn [(resp [body-str]
-            (ring-response {:headers {"content-type" "text/html"}
-                            :status 200
-                            :body body-str}))]
-    (try
-      (let [user (usercore/prepare-password-reset db-spec email password-reset-token)]
-        (if (not (nil? user))
-          (resp (render-resource password-reset-form-mustache-template
-                                 (merge user
-                                        {:password-reset-form-action password-reset-form-action
-                                         (keyword pwdresetutil/param-new-password) pwdresetutil/param-new-password})))
-          (resp (render-resource password-reset-error-mustache-template {}))))
-      (catch Exception e
-        (log/error e (str "Exception in handle-prepare-password-reset. (email: "
-                          email
-                          ", password-reset-form-mustache-template: "
-                          password-reset-form-mustache-template
-                          ", password-reset-form-action: "
-                          password-reset-form-action
-                          ", password-reset-error-mustache-template: "
-                          password-reset-error-mustache-template ")"))
-        (usercore/send-email err-notification-mustache-template
-                             {:exception e
-                              :params [email
-                                       password-reset-form-mustache-template
-                                       password-reset-form-action
-                                       password-reset-error-mustache-template]}
-                             err-subject
-                             err-from-email
-                             err-to-email)
-        (resp (render-resource password-reset-error-mustache-template {}))))))
+  (try
+    (let [user (usercore/prepare-password-reset db-spec email password-reset-token)]
+      (if (not (nil? user))
+        (ring-response (redirect password-reset-web-url))
+        (ring-response (redirect password-reset-error-web-url))))
+    (catch IllegalArgumentException e
+      (ring-response
+       (redirect (str password-reset-error-web-url "/" (.getMessage e)))))
+    (catch Exception e
+      (log/error e (str "Exception in handle-prepare-password-reset. (email: "
+                        email
+                        ", password-reset-web-url: "
+                        password-reset-web-url
+                        ", password-reset-error-web-url: "
+                        password-reset-error-web-url ")"))
+      (usercore/send-email err-notification-mustache-template
+                           {:exception e}
+                           err-subject
+                           err-from-email
+                           err-to-email)
+      (ring-response (redirect password-reset-error-web-url)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Resource definitions
@@ -70,9 +60,8 @@
    entity-uri-prefix
    email
    password-reset-token
-   password-reset-form-mustache-template
-   password-reset-form-action
-   password-reset-error-mustache-template
+   password-reset-web-url
+   password-reset-error-web-url
    err-notification-mustache-template
    err-subject
    err-from-email
@@ -87,9 +76,8 @@
                                               (:uri (:request ctx))
                                               email
                                               password-reset-token
-                                              password-reset-form-mustache-template
-                                              password-reset-form-action
-                                              password-reset-error-mustache-template
+                                              password-reset-web-url
+                                              password-reset-error-web-url
                                               err-notification-mustache-template
                                               err-subject
                                               err-from-email

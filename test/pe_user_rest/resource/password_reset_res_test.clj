@@ -17,6 +17,7 @@
             [pe-user-rest.resource.login-res :as loginres]
             [pe-user-rest.resource.password-reset-util :as pwdresetutil]
             [pe-user-rest.resource.password-reset-res :as passwordresetres]
+            [pe-user-rest.resource.version.password-reset-res-v001]
             [pe-user-rest.meta :as meta]
             [pe-user-core.ddl :as uddl]
             [pe-jdbc-utils.core :as jcore]
@@ -55,10 +56,6 @@
                                              password-reset-email-mustache-template
                                              password-reset-email-subject-line
                                              password-reset-email-from
-                                             prepare-password-reset-url-maker
-                                             password-reset-flagged-url-maker
-                                             password-reset-success-mustache-template
-                                             password-reset-error-mustache-template
                                              err-notification-mustache-template
                                              err-subject
                                              err-from-email
@@ -139,15 +136,12 @@
                          err-from-email
                          err-to-email))
   (ANY password-reset-uri-template
-       [email
-        password-reset-token]
+       []
        (passwordresetres/password-reset-res db-spec
+                                            usermt-subtype-prefix
+                                            userhdr-error-mask
                                             base-url
                                             entity-uri-prefix
-                                            (url-decode email)
-                                            password-reset-token
-                                            password-reset-success-mustache-template
-                                            password-reset-error-mustache-template
                                             err-notification-mustache-template
                                             err-subject
                                             err-from-email
@@ -225,28 +219,29 @@
                                                                                   "smithka@testing.com")]
           ; before we can reset the password via the post, we need to 'prepare' first
           (usercore/prepare-password-reset db-spec "smithka@testing.com" password-reset-token)
-          (let [password-reset-uri (str base-url
+          (let [new-password {"new-password" "againInsecure"
+                              "email" "smithka@testing.com"
+                              "password-reset-token" password-reset-token}
+                password-reset-uri (str base-url
                                         entity-uri-prefix
-                                        meta/pathcomp-users
-                                        "/"
-                                        (url-encode "smithka@testing.com")
-                                        "/"
-                                        meta/pathcomp-password-reset
-                                        "/"
-                                        password-reset-token)
-                req (-> (rtucore/req-w-std-hdrs "text"
-                                                "html"
-                                                nil
+                                        meta/pathcomp-password-reset)
+                req (-> (rtucore/req-w-std-hdrs rumeta/mt-type
+                                                (meta/mt-subtype-user usermt-subtype-prefix)
+                                                meta/v001
                                                 "UTF-8;q=1,ISO-8859-1;q=0"
-                                                nil
+                                                "json"
                                                 "en-US"
                                                 :post
                                                 password-reset-uri)
-                        (mock/body (format "%s=againInsecure" pwdresetutil/param-new-password))
-                        (mock/content-type "application/x-www-form-urlencoded"))
+                        (mock/body (json/write-str new-password))
+                        (mock/content-type (rucore/content-type rumeta/mt-type
+                                                                (meta/mt-subtype-user usermt-subtype-prefix)
+                                                                meta/v001
+                                                                "json"
+                                                                "UTF-8")))
                 resp (app req)
                 hdrs (:headers resp)]
-            (testing "status code" (is (= 200 (:status resp))))
+            (testing "status code" (is (= 204 (:status resp))))
             ;; Load user from database using new password
             (is (nil? (usercore/authenticate-user-by-password db-spec "smithka@testing.com" "insecure")))
             (let [[loaded-user-id loaded-user] (usercore/authenticate-user-by-password db-spec "smithka@testing.com" "againInsecure")]

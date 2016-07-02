@@ -16,6 +16,7 @@
                  [clj-time "0.8.0"]
                  [clojurewerkz/mailer "1.2.0"]
                  [de.ubercode.clostache/clostache "1.4.0"]
+                 [ring/ring-core "1.5.0"]
                  [pe-core-utils "0.0.14"]
                  [pe-user-core "0.1.39"]
                  [pe-rest-utils "0.0.39"]]

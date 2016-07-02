@@ -96,6 +96,8 @@
 (def verification-email-mustache-template "email/templates/account-verification.html.mustache")
 (def welcome-and-verification-email-subject-line "welcome and account verification")
 (def welcome-and-verification-email-from "welcome@example.com")
+(def verification-success-uri "/verificationSuccess")
+(def verification-error-uri "/verificationError")
 
 (def new-user-notification-mustache-template "email/templates/new-signup-notification.html.mustache")
 (def new-user-notification-from-email "alerts@example.com")
@@ -124,8 +126,8 @@
        "/"
        verification-token))
 
-(def verification-success-mustache-template "web/templates/verification-success.html.mustache")
-(def verification-error-mustache-template "web/templates/verification-error.html.mustache")
+(def verification-success-web-url (str base-url verification-success-uri))
+(def verification-error-web-url (str base-url verification-error-uri))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Password reset related
@@ -145,9 +147,10 @@
        "/"
        password-reset-token))
 
-(defn password-reset-form-action-maker
+(defn password-reset-web-url-maker
   [email password-reset-token]
-  (str entity-uri-prefix
+  (str base-url
+       "/"
        meta/pathcomp-users
        "/"
        (url-encode email)
@@ -156,19 +159,16 @@
        "/"
        password-reset-token))
 
-(defn password-reset-flagged-url-maker
+(defn password-reset-flagged-web-url-maker
   [email password-reset-token]
   (str base-url
-       entity-uri-prefix
+       "/"
        meta/pathcomp-users
        (url-encode email)
        "/"
        meta/pathcomp-password-reset-flagged
        "/"
        password-reset-token))
-
-(def password-reset-success-mustache-template "web/templates/password-reset-success.html.mustache")
-(def password-reset-error-mustache-template "web/templates/password-reset-error.html.mustache")
 
 (def users-uri-template
   (rucore/make-abs-link-href base-url (format "%s%s" entity-uri-prefix meta/pathcomp-users)))
@@ -200,10 +200,9 @@
           meta/pathcomp-prepare-password-reset))
 
 (def password-reset-uri-template
-  (format "%s%s%s/:email/%s/:password-reset-token"
+  (format "%s%s%s"
           base-url
           entity-uri-prefix
-          meta/pathcomp-users
           meta/pathcomp-password-reset))
 
 (def login-uri-template
