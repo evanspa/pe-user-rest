@@ -40,4 +40,4 @@
                                   user-id
                                   plaintext-auth-token
                                   usercore/invalrsn-logout)
-  {:status 204})
+  {:status 204 :logout true})

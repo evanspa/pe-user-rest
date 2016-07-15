@@ -108,4 +108,6 @@
                                         err-subject
                                         err-from-email
                                         err-to-email))
-  :handle-created (fn [ctx] (rucore/handle-resp ctx hdr-auth-token hdr-error-mask)))
+  :handle-created (fn [ctx] (rucore/handle-resp ctx
+                                                hdr-auth-token
+                                                hdr-error-mask)))
