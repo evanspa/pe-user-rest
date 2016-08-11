@@ -36,6 +36,7 @@
    logout-body
    merge-embedded-fn
    merge-links-fn]
+  (log/debug "in do-logout-fn, user-id: [" user-id "], plaintext: [" plaintext-auth-token "]")
   (usercore/invalidate-user-token db-spec
                                   user-id
                                   plaintext-auth-token

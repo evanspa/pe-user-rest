@@ -70,7 +70,7 @@
                   user (-> (into {:last-modified (c/to-long (:user/updated-at user))} user)
                            (ucore/trim-keys [:user/hashed-password])
                            (merge-links-fn user-id)
-                           (merge-embedded-fn user-id))
+                           (merge-embedded-fn user-id db-spec))
                   plaintext-token (usercore/create-and-save-auth-token db-spec user-id new-token-id)]
               {:status 200
                :do-entity user
